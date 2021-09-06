@@ -1,4 +1,38 @@
 function weightedSDSystem = appendSDWeightingFilters(unweightedSDSystem, Wwc, Wzc, Wwd, Wzd)
+% APPENDSDWEIGHTINGFILTERS combines weighting filters with an open-loop
+% sampled-data system
+%
+%  This function appends weighted filters to an open-loop Sampled-Data
+%  system. More specifically it transforms a SD system with state-space 
+%  realization of the form:
+%
+%  \dot{x} = Ac*x  + Bwc*w_c    + Buc*u
+%   x^+    = x
+%   z_c    = Czc*x + Dzc_wc*w_c + Dzc_u*u
+%   z_d    = Czd*x + Dzd_wd*w_d + Dzd_u*\hat{u}
+%   y      = Cy*x  + Dy_wd*w_d
+%
+%  Into a SD system with state-space realization of the form:
+%
+%  \dot{x} = Ac*x  + Bwc*w_c    + Buc*u
+%   x^+    = Ad*x  + Bwd*w_d    + Bud*\hat{u}
+%   z_c    = Czc*x + Dzc_wc*w_c + Dzc_u*u
+%   z_d    = Czd*x + Dzd_wd*w_d + Dzd_u*\hat{u}
+%   y      = Cy*x  + Dy_wd*w_d
+%
+%           +---------+      +--------+      +---------+
+%           |         |      |        |      |         |
+%  w_c ---> | W_{w_c} | ---> |        | ---> | W_{z_c} | ---> z_c
+%           |         |      |        |      |         |
+%           +---------+      |        |      +---------+
+%           +---------+      |        |      +---------+
+%           |         |      |   SD   |      |         |
+%  w_d ---> | W_{w_d} | ---> |        | ---> | W_{z_d} | ---> z_d
+%           |         |      |        |      |         |
+%           +---------+      |        |      +---------+
+%                            |        |
+%  u ----------------------> |        | --------------------> y
+%                            +--------+
 
 % Make sure that the SD system is indeed an unweighted system
 AdIdentityCheck = all(unweightedSDSystem.Ad == eye(size(unweightedSDSystem.Ad)), 'all');

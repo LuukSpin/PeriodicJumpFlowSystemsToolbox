@@ -4,8 +4,8 @@ classdef SampledDataSystem < handle & matlab.mixin.CustomDisplay
     
     properties
         %Flow matrices
-        Ac
-        Bwc
+        Ac  double {mustBeFinite}
+        Bwc double {mustBeFinite(Bwc)}
         
         %Jump Matrices
         Ad

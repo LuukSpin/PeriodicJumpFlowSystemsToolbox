@@ -1,6 +1,7 @@
 function stabilityFlag = JFStability(CLJFobj, h)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+%JFSTABILITY checks the stability of a closed-loop jump-flow system
+%
+%   
 
 %Determine the fundamental monodromy matrix P=Phi = Ad*exp(Ac(h)
 Phi = CLJFobj.Ad*expm(CLJFobj.Ac*h);
