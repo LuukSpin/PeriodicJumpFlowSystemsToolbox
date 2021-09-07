@@ -1,5 +1,5 @@
 function [A_hat, B_hat, C_hat] = HamiltonianJF(Ac, Bc, Cc, Dc, gamma, h)
-%UNTITLED9 Summary of this function goes here
+%HAMILTONIANJF determines the 
 %   Detailed explanation goes here
 
 n = size(Ac, 1);
