@@ -33,6 +33,7 @@ TJF_ref.Dzc_wc = Dcc;
 
 %Discrete-time performance channels
 TJF_ref.Czd = [Cd Ddd];
+% TJF_ref.Czd = [Cd zeros(n_zd, n_wd)];
 
 checkZeroDdc = all(Ddc==0, 'all');
 if ~checkZeroDdc
@@ -40,5 +41,6 @@ if ~checkZeroDdc
 end
 
 TJF_ref.Dzd_wd = zeros(n_zd, n_wd); %This is zero because: see error message above
+% TJF_ref.Dzd_wd = Ddd;
 
 end

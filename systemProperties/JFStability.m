@@ -4,7 +4,7 @@ function stabilityFlag = JFStability(CLJFobj, h)
 %   
 
 %Determine the fundamental monodromy matrix P=Phi = Ad*exp(Ac(h)
-Phi = CLJFobj.Ad*expm(CLJFobj.Ac*h);
+Phi = expm(CLJFobj.Ac*h)*CLJFobj.Ad;
 Phi_eig = eig(Phi);
 stabilityFlag = all(abs(Phi_eig)<1);
 

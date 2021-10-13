@@ -22,13 +22,14 @@ nzd = size(objCLJF.Dzd_wd, 1);
 nb = size(B_hat, 2);
 nc = size(C_hat, 1);
 
+htmp = 1;
 %Diagonal entries
 entry11 = Ph;
-entry22 = gamma^2*eye(nwd);
+entry22 = gamma^2*eye(nwd)*htmp;
 entry33 = eye(nb);
 entry44 = Ph;
 entry55 = eye(nc);
-entry66 = eye(nzd);
+entry66 = eye(nzd)/htmp;
 
 %Lower triangular entries
 entry21 = zeros(nwd, nx);

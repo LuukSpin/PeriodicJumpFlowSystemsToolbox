@@ -32,15 +32,16 @@ nc = size(X, 1);
 nwd = size(Ddd_p, 2);
 nzd = size(Ddd_p, 1);
 
+h_tmp = 1;
 %Diagonal entries
 entry11 = Y;
 entry22 = X;
-entry33 = gamma^2*eye(nwd);
+entry33 = gamma^2*eye(nwd)*h_tmp;
 entry44 = eye(rb);
 entry55 = Y;
 entry66 = X;
 entry77 = eye(rc);
-entry88 = eye(nzd);
+entry88 = eye(nzd)/h_tmp;
 
 %Lower triangular entries
 entry21 = eye(nc);

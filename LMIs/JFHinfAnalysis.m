@@ -20,34 +20,35 @@ initialfeas = 0;
 while N < Nmax
     N = N + 1;
     
-    if ~xor((a(2) - a(1)) > tol, N < Nmax-1) || last 
+    if ~xor((a(2) - a(1)) > tol, N < Nmax-1) || last
         gamma = mean(a);
-    
-    % Fill the H-infinity LMI
-    HinfLMIAnalysisMatrix = fillHinfAnalysisLMI(objCLJF, Ph, h, gamma);
-    HinfAnalysisLMI = HinfLMIAnalysisMatrix >= 1e-9;
-    
-    
-    % Add a constraint
-    constraint = Ph >= 1e-9;
-    
-    opts = LS.opts;
-%     diagnostics = optimize(HinfLMI+constraint, [], opts.LMI)
-    diagnostics = optimize(HinfAnalysisLMI+constraint, [], opts.LMI);
-    
-    if (value(HinfAnalysisLMI) && value(constraint))
-        a(2) = mean(a);
-        initialfeas = 1;
-    else
-        if initialfeas
-            a(1) = mean(a);
+        
+        % Fill the H-infinity LMI
+        HinfLMIAnalysisMatrix = fillHinfAnalysisLMI(objCLJF, Ph, h, gamma);
+        HinfAnalysisLMI = (HinfLMIAnalysisMatrix+HinfLMIAnalysisMatrix')/2 >= 1e-9*eye(size(HinfLMIAnalysisMatrix));
+        
+        
+        % Add a constraint
+        constraint = Ph >= 1e-9;
+        
+        opts = LS.opts;
+        %     diagnostics = optimize(HinfLMI+constraint, [], opts.LMI)
+        rng(1);
+        diagnostics = optimize(HinfAnalysisLMI+constraint, [], opts.LMI);
+        
+        if (value(HinfAnalysisLMI) && value(constraint))
+            a(2) = mean(a);
+            initialfeas = 1;
         else
-            a(2) = 2*a(2);
+            if initialfeas
+                a(1) = mean(a);
+            else
+                a(2) = 2*a(2);
+            end
         end
-    end
-    if last
-        break;
-    end
+        if last
+            break;
+        end
     else
         last = 1;
         a(1) = a(2);
@@ -57,10 +58,14 @@ end
 
 % Determine if bisection-based search was succesful
 if initialfeas
-    gamma = a(2);
+    if JFStability(objCLJF, h)
+        gamma = a(2);
+    else
+        gamma = nan;
+        return
+    end
 else
-    gamma = inf;
-    Controller = ss(0);
+    gamma = nan;
     return
 end
 
