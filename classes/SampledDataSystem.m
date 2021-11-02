@@ -21,11 +21,11 @@ classdef SampledDataSystem < handle & matlab.mixin.CustomDisplay
     end
 
     properties (Dependent = true, SetAccess = private, GetAccess = 'public')
-        nx
-        nwc
-        nzc
-        nwd
-        nzd
+        nx      (1,1) double
+        nwc     (1,1) double
+        nzc     (1,1) double
+        nwd     (1,1) double
+        nzd     (1,1) double
     end
 
     properties (GetAccess = 'public', SetAccess = ?OpenLoopSampledDataSystem)

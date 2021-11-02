@@ -18,8 +18,8 @@ classdef OpenLoopSampledDataSystem < SampledDataSystem
     end
 
     properties (Dependent = true, SetAccess = private, GetAccess = 'public')
-        nu
-        ny
+        nu      (1,1) double
+        ny      (1,1) double
     end
 
     methods

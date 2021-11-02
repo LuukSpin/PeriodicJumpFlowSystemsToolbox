@@ -16,8 +16,8 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
     end
 
     properties (Dependent = true, SetAccess = private, GetAccess = 'public')
-        nu
-        ny
+        nu      (1,1) double
+        ny      (1,1) double
     end
 
     methods
@@ -119,6 +119,99 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
 
             % Set Loop to "Open"
             obj.Loop = 'Open';
+        end
+
+        % When OpenLoopJumpFlowSystem.nu is called it is calculated based on the
+        % Bud property
+        function nu = get.nu(OpenLoopJumpFlowSystem)
+            nu = size(OpenLoopJumpFlowSystem.Bud, 2);
+        end
+
+        % When OpenLoopJumpFlowSystem.ny is called it is calculated based on the
+        % Cy property
+        function ny = get.ny(OpenLoopJumpFlowSystem)
+            ny = size(OpenLoopJumpFlowSystem.Cy, 1);
+        end
+
+        % Determine closed-loop matrices based on open-loop jump-flow
+        % system
+        function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLJFSystem, nc)
+            arguments
+                OLJFSystem      (1,1) OpenLoopJumpFlowSystem
+                nc              (1,1) double = OLJFSystem.nx
+            end
+
+            %dimensions
+            nwc = OLJFSystem.nwc;
+            nzc = OLJFSystem.nzc;
+
+            Ac = blkdiag(OLJFSystem.Ac, zeros(nc));
+            Bwc = [OLJFSystem.Bwc; zeros(nc, nwc)];
+            Czc = [OLJFSystem.Czc, zeros(nzc, nc)];
+            Dzc_wc = OLJFSystem.Dzc_wc;
+
+        end
+
+        function objJF = lft(OLJFSystem, DiscreteController)
+            arguments
+                OLJFSystem          (1,1) OpenLoopJumpFlowSystem
+                DiscreteController  {mustBeNumericOrListedType(DiscreteController, "ss", "tf")}
+            end
+
+            Controller = ss(DiscreteController);
+
+            if Controller.Ts == 0
+                error('The controller has to be a discrete-time controller');
+            end
+
+            % Sampling time
+            h = Controller.Ts;
+
+            % Controller matrices
+            Acontroller = Controller.A;
+            Bcontroller = Controller.B;
+            Ccontroller = Controller.C;
+            Dcontroller = Controller.D;
+            controllerMat = [Acontroller, Bcontroller; Ccontroller, Dcontroller];
+
+            % Dimensions
+            nx = OLJFSystem.nx;
+            nc = size(Acontroller, 1);
+            nwd = OLJFSystem.nwd;
+            nzd = OLJFSystem.nzd;
+
+            % Determine all closed-loop flow matrices
+            [Ac, Bwc, Czc, Dzc_wc] = OLJFSystem.ClosedLoopFlowMatrices(nc);
+
+            % Jump matrices
+            AdAdd = blkdiag(OLJFSystem.Ad, zeros(nc));
+            AdLeft = [zeros(nx, nc), OLJFSystem.Bud; eye(nc), zeros(nc, OLJFSystem.nu)];
+            AdRight = [zeros(nc, nx), eye(nc); OLJFSystem.Cy, zeros(OLJFSystem.ny, nc)];
+            Ad = AdAdd+AdLeft*controllerMat*AdRight;
+            
+            BwdAdd = [OLJFSystem.Bwd; zeros(nc, nwd)];
+            BwdLeft = AdLeft;
+            BwdRight = [zeros(nc, nwd); OLJFSystem.Dy_wd];
+            Bwd = BwdAdd+BwdLeft*controllerMat*BwdRight;
+
+            % Discrete-time performance channel matrices
+            CzdAdd = [OLJFSystem.Czd, zeros(nzd, nc)];
+            CzdLeft = [zeros(nzd, nc), OLJFSystem.Dzd_u];
+            CzdRight = AdRight;
+            Czd = CzdAdd+CzdLeft*controllerMat*CzdRight;
+
+            Dzd_wdAdd = OLJFSystem.Dzd_wd;
+            Dzd_wdLeft = CzdLeft;
+            Dzd_wdRight = BwdRight;
+            Dzd_wd = Dzd_wdAdd+Dzd_wdLeft*controllerMat*Dzd_wdRight;
+
+            % Initiate closed-loop jump-flow system
+            objJF = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
+
+            if ~objJF.isstable(h)
+                warning('Closing the loop with the specified controller does not results in a stable closed-loop system!');
+            end
+
         end
     end
     methods (Access = protected)

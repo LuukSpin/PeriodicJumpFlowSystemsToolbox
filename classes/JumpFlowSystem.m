@@ -21,11 +21,11 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
     end
 
     properties (Dependent = true, SetAccess = private, GetAccess = 'public')
-        nx
-        nwc
-        nzc
-        nwd
-        nzd
+        nx      (1,1) double
+        nwc     (1,1) double
+        nzc     (1,1) double
+        nwd     (1,1) double
+        nzd     (1,1) double
     end
     
     properties (GetAccess = 'public', SetAccess = ?OpenLoopJumpFlowSystem)
@@ -160,6 +160,11 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
         function nzd = get.nzd(JumpFlowSystem)
             nzd = size(JumpFlowSystem.Czd, 1);
         end
+
+        % Stability function
+        function stabilityFlag = isstable(JumpFlowSystem, h)
+            stabilityFlag = all(abs(eig(expm(JumpFlowSystem.Ac*h)*JumpFlowSystem.Ad)) < 1);
+        end
     end
     
     methods (Access = protected)
@@ -169,4 +174,3 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
         end
     end
 end
-
