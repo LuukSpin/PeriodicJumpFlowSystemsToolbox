@@ -136,6 +136,30 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
         % Determine closed-loop matrices based on open-loop jump-flow
         % system
         function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLJFSystem, nc)
+            %CLOSEDLOOPFLOWMATRICES calculates continuous-time flow matrices (Ac, Bwc,
+            %Czc, Dzc_wc) fromt the open-loop jump-flow system.
+            %
+            %   [Ac, Bc, Cc, Dc] = CLOSEDLOOPFLOWMATRICES(OLJFSystem, nc) returns the
+            %   closed-loop flow matrices based on an open-loop jump-flow system. Here
+            %   nc denotes the dimension of the controller.
+            %
+            %   The open-loop jump-flow system has the following state-space
+            %   realization.
+            %
+            %  \dot{x} = Ac*x  + Bwc*w_c
+            %   x^+    = Ad*x  + Bwd*w_d    + Bud*\hat{u}
+            %   z_c    = Czc*x + Dzc_wc*w_c
+            %   z_d    = Czd*x + Dzd_wd*w_d + Dzd_u*\hat{u}
+            %   y      = Cy*x  + Dy_wd*w_d
+            %
+            %   The closed-loop jump flow system has the following state-space
+            %   realization
+            %
+            %  \xi   = Ac*\xi  + Bc*w_c
+            %  \xi^+ = Ad*\xi  + Bd*w_d
+            %   z_c  = Cc*\xi + Dc*w_c
+            %   z_d  = Cd*\zi + Dd*w_d
+
             arguments
                 OLJFSystem      (1,1) OpenLoopJumpFlowSystem
                 nc              (1,1) double = OLJFSystem.nx
@@ -152,64 +176,87 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
 
         end
 
-        function objJF = lft(OLJFSystem, DiscreteController)
+        function objJF = lft(OLJFSystem1, OLJFSystem2)
+            %LFT is used to interconnect systems
+            %   LFT(sys1, sys2) produces a closed-loop jump-flow system.
+            %   sys1 has to be an OpenLoopJumpFlowSystem while sys2 may be
+            %   a discrete controller. The interconnection looks as
+            %   follows:
+            %
+
             arguments
-                OLJFSystem          (1,1) OpenLoopJumpFlowSystem
-                DiscreteController  {mustBeNumericOrListedType(DiscreteController, "ss", "tf")}
+                OLJFSystem1         (1,1) OpenLoopJumpFlowSystem
+                OLJFSystem2         {mustBeNumericOrListedType(OLJFSystem2, "ss", "tf", "OpenLoopJumpFlowSystem")}
             end
 
-            Controller = ss(DiscreteController);
-
-            if Controller.Ts == 0
-                error('The controller has to be a discrete-time controller');
+            % If the second input is a controller than convert it to a
+            % OLJFSystem
+            if ~isa(OLJFSystem2, 'OpenLoopJumpFlowSystem')
+                OLJFSystem2 = ss(OLJFSystem2);
+                h = OLJFSystem2.Ts;
+                OLJFSystem2 = makeJFFromDiscreteController(OLJFSystem2);
             end
 
-            % Sampling time
-            h = Controller.Ts;
+            % Make sure that the interconnection has a compatible
+            % connection
+            y1 = size(OLJFSystem1.Cy, 1);
+            u1 = size(OLJFSystem1.Bud, 2);
+            y2 = size(OLJFSystem2.Cy, 1);
+            u2 = size(OLJFSystem2.Bud, 2);
 
-            % Controller matrices
-            Acontroller = Controller.A;
-            Bcontroller = Controller.B;
-            Ccontroller = Controller.C;
-            Dcontroller = Controller.D;
-            controllerMat = [Acontroller, Bcontroller; Ccontroller, Dcontroller];
+            if (y1 ~= u2) || (u1 ~= y2)
+                error('The interconnection is not possible because the dimensions of the connection does not match');
+            end
 
-            % Dimensions
-            nx = OLJFSystem.nx;
-            nc = size(Acontroller, 1);
-            nwd = OLJFSystem.nwd;
-            nzd = OLJFSystem.nzd;
+            Dyu1 = OLJFSystem1.Dy_u;
+            Dyu2 = OLJFSystem2.Dy_u;
 
-            % Determine all closed-loop flow matrices
-            [Ac, Bwc, Czc, Dzc_wc] = OLJFSystem.ClosedLoopFlowMatrices(nc);
+            % Interconnection must be wellposed, can be checked by
+            % feed-through terms
+            wellPosednessMatrix = [eye(y2), -Dyu2; -Dyu1, eye(y1)];
+            if det(wellPosednessMatrix) == 0
+                error('This interconnection is not well-posed, and hence the interconnection will not result in a non-causal system. The interconnection is aborted.');
+            end
 
-            % Jump matrices
-            AdAdd = blkdiag(OLJFSystem.Ad, zeros(nc));
-            AdLeft = [zeros(nx, nc), OLJFSystem.Bud; eye(nc), zeros(nc, OLJFSystem.nu)];
-            AdRight = [zeros(nc, nx), eye(nc); OLJFSystem.Cy, zeros(OLJFSystem.ny, nc)];
-            Ad = AdAdd+AdLeft*controllerMat*AdRight;
-            
-            BwdAdd = [OLJFSystem.Bwd; zeros(nc, nwd)];
-            BwdLeft = AdLeft;
-            BwdRight = [zeros(nc, nwd); OLJFSystem.Dy_wd];
-            Bwd = BwdAdd+BwdLeft*controllerMat*BwdRight;
+            % Flow and continuous-time performance channels matrices
+            Ac = blkdiag(OLJFSystem1.Ac, OLJFSystem2.Ac);
+            Bwc = blkdiag(OLJFSystem1.Bwc, OLJFSystem2.Bwc);
+            Czc = blkdiag(OLJFSystem1.Czc, OLJFSystem2.Czc);
+            Dzc_wc= blkdiag(OLJFSystem1.Dzc_wc, OLJFSystem2.Dzc_wc);
 
-            % Discrete-time performance channel matrices
-            CzdAdd = [OLJFSystem.Czd, zeros(nzd, nc)];
-            CzdLeft = [zeros(nzd, nc), OLJFSystem.Dzd_u];
-            CzdRight = AdRight;
-            Czd = CzdAdd+CzdLeft*controllerMat*CzdRight;
+            % Define matrices used in the partitioning that follows
+            R12 = eye(y1)-Dyu1*Dyu2;
+            R21 = eye(y2)-Dyu2*Dyu1;
+            Ad1 = OLJFSystem1.Ad;
+            Ad2 = OLJFSystem2.Ad;
+            Bu1 = OLJFSystem1.Bud;
+            Bu2 = OLJFSystem2.Bud;
+            Cy1 = OLJFSystem1.Cy;
+            Cy2 = OLJFSystem2.Cy;
+            Bd1 = OLJFSystem1.Bwd;
+            Bd2 = OLJFSystem2.Bwd;
+            Dyd1 = OLJFSystem1.Dy_wd;
+            Dyd2 = OLJFSystem2.Dy_wd;
+            Cd1 = OLJFSystem1.Czd;
+            Cd2 = OLJFSystem2.Czd;
+            Ddu1 = OLJFSystem1.Dzd_u;
+            Ddu2 = OLJFSystem2.Dzd_u;
+            Ddd1 = OLJFSystem1.Dzd_wd;
+            Ddd2 = OLJFSystem2.Dzd_wd;
 
-            Dzd_wdAdd = OLJFSystem.Dzd_wd;
-            Dzd_wdLeft = CzdLeft;
-            Dzd_wdRight = BwdRight;
-            Dzd_wd = Dzd_wdAdd+Dzd_wdLeft*controllerMat*Dzd_wdRight;
+            % Jump and discrete-time performance channels matrices
+            Ad = [Ad1 + Bu1/R21*Dyu2*Cy1, Bu1/R21*Cy2; Bu2/R12*Cy1, Ad2 + Bu2/R12*Dyu1*Cy2];
+            Bwd = [Bd1 + Bu1/R21*Dyu2*Dyd1, Bu1/R21*Dyd2; Bu2/R12*Dyd1, Bd2 + Bu2/R12*Dyu1*Dyd2];
+            Czd = [Cd1 + Ddu1/R21*Dyu2*Dyd1, Ddu1/R21*Dyd2; Ddu2/R12*Dyd1, Cd2 + Ddu2/R12*Dyu1*Dyd2];
+            Dzd_wd = [Ddd1 + Ddu1/R21*Dyu2*Dyd1, Ddu1/R21*Dyd2; Ddu2/R12*Dyd1, Ddd2 + Ddu2/R12*Dyu1*Dyd2];
 
-            % Initiate closed-loop jump-flow system
             objJF = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
 
-            if ~objJF.isstable(h)
-                warning('Closing the loop with the specified controller does not results in a stable closed-loop system!');
+            % Check stability if second input is a controller
+            if ~isa(OLJFSystem2, 'OpenLoopJumpFlowSystem')
+                if ~objJF.isstable(h)
+                    warning('The closed-loop interconnection of the two systems is not stable!');
+                end
             end
 
         end
