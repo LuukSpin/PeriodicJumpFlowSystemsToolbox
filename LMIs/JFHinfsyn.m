@@ -91,7 +91,7 @@ V = inv(X_value)-Y_value;
 
 % Calculate controller
 controllerMat = [V, Y_value*A_bar*Q_bar; zeros(nu, size(V, 2)), eye(nu)]\[Gamma_value-Y_value*A_bar*Z_bar*X_value, Theta_value; Upsilon_value, Omega_value]/[U', zeros(size(Y, 1), ny); W_bar*X_value, eye(ny)];
-Controller = minreal(ss(controllerMat(1:nc, 1:nc), controllerMat(1:nc, nc+1:end), controllerMat(nc+1:end, 1:nc), controllerMat(nc+1:end, nc+1:end), h));
+Controller = minreal(ss(controllerMat(1:nc, 1:nc), controllerMat(1:nc, nc+1:end), controllerMat(nc+1:end, 1:nc), controllerMat(nc+1:end, nc+1:end), h), [], false);
 
 K_zpk = zpk(Controller);
 K_zeros = K_zpk.z{:};
@@ -101,7 +101,7 @@ nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
 nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
 
 if nrUnstabPole+nrNonMinPhaseZero>0
-    Controller = controllerConditioning(OpenLoopJFSystem, gamma, X, Y, Gamma, Theta, Upsilon, Omega, backoff, numAcc, h);
+    [Controller, gamma] = controllerConditioning(OpenLoopJFSystem, gamma, X, Y, Gamma, Theta, Upsilon, Omega, backoff, numAcc, h);
 end
 
 

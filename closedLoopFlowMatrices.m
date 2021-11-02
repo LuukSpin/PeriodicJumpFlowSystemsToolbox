@@ -1,6 +1,6 @@
 function [A, B, C, D] = closedLoopFlowMatrices(JFSystem, nc)
 %CLOSEDLOOPFLOWMATRICES calculates continuous-time flow matrices (Ac, Bwc,
-%Czc, Dzc_wd) fromt the open-loop jump-flow system.
+%Czc, Dzc_wc) fromt the open-loop jump-flow system.
 %   
 %   [Ac, Bc, Cc, Dc] = CLOSEDLOOPFLOWMATRICES(OLJFSystem, nc) returns the
 %   closed-loop flow matrices based on an open-loop jump-flow system. Here
@@ -23,26 +23,18 @@ function [A, B, C, D] = closedLoopFlowMatrices(JFSystem, nc)
 %   z_c  = Cc*\xi + Dc*w_c
 %   z_d  = Cd*\zi + Dd*w_d
 
-ni = nargin;
-
-checkOL = strcmpi(JFSystem.Loop, 'Open');
-if ~checkOL
-    error('Closed-loop flow matrices can only be determine for a open-loop system');
+arguments
+    JFSystem (1,1) OpenLoopJumpFlowSystem
+    nc = JFSystem.nx
 end
 
 %dimensions
-nx = size(JFSystem.Ac, 1); %This is equal to nx of the sampled-data system plus nu
-n_wc = size(JFSystem.Bwc, 2);
-n_zc = size(JFSystem.Czc, 1);
-
-if ni<2
-    nc = nx;
-end
+nwc = JFSystem.nwc;
+nzc = JFSystem.nzc;
 
 A = blkdiag(JFSystem.Ac, zeros(nc));
-B = [JFSystem.Bwc; zeros(nc, n_wc)];
-C = [JFSystem.Czc, zeros(n_zc, nc)];
+B = [JFSystem.Bwc; zeros(nc, nwc)];
+C = [JFSystem.Czc, zeros(nzc, nc)];
 D = JFSystem.Dzc_wc;
 
 end
-

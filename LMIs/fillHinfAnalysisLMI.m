@@ -1,4 +1,4 @@
-function HinfLMIAnalysisMatrix = fillHinfAnalysisLMI(objCLJF, Ph, h, gamma)
+function [HinfLMIAnalysisMatrix, B_hat] = fillHinfAnalysisLMI(objCLJF, Ph, h, gamma)
 
 % Flow matrices
 Ac = objCLJF.Ac;

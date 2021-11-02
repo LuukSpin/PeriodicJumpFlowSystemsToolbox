@@ -3,7 +3,7 @@ function weightedSDSystem = appendSDWeightingFilters(unweightedSDSystem, Wwc, Wz
 % sampled-data system
 %
 %  This function appends weighted filters to an open-loop Sampled-Data
-%  system. More specifically it transforms a SD system with state-space 
+%  system. More specifically it transforms a SD system with state-space
 %  realization of the form:
 %
 %  \dot{x} = Ac*x  + Bwc*w_c    + Buc*u
@@ -34,6 +34,15 @@ function weightedSDSystem = appendSDWeightingFilters(unweightedSDSystem, Wwc, Wz
 %  u ----------------------> |        | --------------------> y
 %                            +--------+
 
+%Check arguments
+arguments
+    unweightedSDSystem (1,1) {mustBeA(unweightedSDSystem, ["OpenLoopSampledDataSystem", "SampledDataSystem"])}
+    Wwc {mustBeNumericOrListedType(Wwc, "ss", "tf")} = 1
+    Wzc {mustBeNumericOrListedType(Wzc, "ss", "tf")} = 1
+    Wwd {mustBeNumericOrListedType(Wwd, "ss", "tf")} = 1
+    Wzd {mustBeNumericOrListedType(Wzd, "ss", "tf")} = 1
+end
+
 % Make sure that the SD system is indeed an unweighted system
 AdIdentityCheck = all(unweightedSDSystem.Ad == eye(size(unweightedSDSystem.Ad)), 'all');
 BwdZeroCheck = all(unweightedSDSystem.Bwd == zeros(size(unweightedSDSystem.Bwd)), 'all');
@@ -44,7 +53,11 @@ end
 
 % Check that filter Wwc is ss (or tf) class and continuous-time
 if ~(isa(Wwc, 'ss') || isa(Wwc, 'tf'))
-    error('The weighting filter for the continuous-time disturbance channel should be of class "ss" or "tf"');
+    if ~isnumeric(Wwc)
+        error('The weighting filter for the continuous-time disturbance channel should be of class "ss" or "tf"');
+    else
+        Wwc = ss(Wwc);
+    end
 else
     Wwc = ss(Wwc);
     if Wwc.Ts ~= 0
@@ -121,17 +134,17 @@ weightedSDSystem = OpenLoopSampledDataSystem();
 
 %Flow matrices of the weighted SD system
 weightedSDSystem.Ac = [unweightedSDSystem.Ac, unweightedSDSystem.Bwc*Wwc.C, zeros(nx_sd, nx_zc), zeros(nx_sd, nx_wd), zeros(nx_sd, nx_zd);...
-                       zeros(nx_wc, nx_sd), Wwc.A, zeros(nx_wc, nx_zc), zeros(nx_wc, nx_wd), zeros(nx_wc, nx_zd);...
-                       Wzc.B*unweightedSDSystem.Czc, Wzc.B*unweightedSDSystem.Dzc_wc*Wwc.C, Wzc.A, zeros(nx_zc, nx_wd), zeros(nx_zc, nx_zd);...
-                       zeros(nx_wd, nx_sd+nx_wc+nx_zc+nx_wd+nx_zd);...
-                       zeros(nx_zd, nx_sd+nx_wc+nx_zc+nx_wd+nx_zd)];
+    zeros(nx_wc, nx_sd), Wwc.A, zeros(nx_wc, nx_zc), zeros(nx_wc, nx_wd), zeros(nx_wc, nx_zd);...
+    Wzc.B*unweightedSDSystem.Czc, Wzc.B*unweightedSDSystem.Dzc_wc*Wwc.C, Wzc.A, zeros(nx_zc, nx_wd), zeros(nx_zc, nx_zd);...
+    zeros(nx_wd, nx_sd+nx_wc+nx_zc+nx_wd+nx_zd);...
+    zeros(nx_zd, nx_sd+nx_wc+nx_zc+nx_wd+nx_zd)];
 weightedSDSystem.Bwc = [unweightedSDSystem.Bwc*Wwc.D; Wwc.B; Wzc.B*unweightedSDSystem.Dzc_wc*Wwc.D; zeros(nx_wd+nx_zd, n_wc)];
 weightedSDSystem.Buc = [unweightedSDSystem.Buc; zeros(nx_wc, nu); Wzc.B*unweightedSDSystem.Dzc_u; zeros(nx_wd+nx_zd, nu)];
 
 %Jump matrices of the weighted SD system
 weightedSDSystem.Ad = [eye(nx_sd+nx_wc+nx_zc), zeros(nx_sd+nx_wc+nx_zc, nx_wd+nx_zd);...
-                       zeros(nx_wd, nx_sd+nx_wc+nx_zc), Wwd.A, zeros(nx_wd, nx_zd);...
-                       Wzd.B*unweightedSDSystem.Czd, zeros(nx_zd, nx_wc+nx_zc), Wzd.B*unweightedSDSystem.Dzd_wd*Wwd.C, Wzd.A];
+    zeros(nx_wd, nx_sd+nx_wc+nx_zc), Wwd.A, zeros(nx_wd, nx_zd);...
+    Wzd.B*unweightedSDSystem.Czd, zeros(nx_zd, nx_wc+nx_zc), Wzd.B*unweightedSDSystem.Dzd_wd*Wwd.C, Wzd.A];
 weightedSDSystem.Bwd = [zeros(nx_sd+nx_wc+nx_zc, n_wd); Wwd.B; Wzd.B*unweightedSDSystem.Dzd_wd*Wwd.D];
 weightedSDSystem.Bud = [zeros(nx_sd+nx_wc+nx_zc+nx_wd, nu); Wzd.B*unweightedSDSystem.Dzd_u];
 
