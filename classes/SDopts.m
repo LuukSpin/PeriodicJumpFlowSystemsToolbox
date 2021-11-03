@@ -5,12 +5,17 @@ classdef SDopts < handle
         bode
         nyquist
         LMI
+        simulation
         reconstructor
     end
 
     methods
         % Constructor
-        function obj = SDopts()
+        function obj = SDopts(h)
+            arguments
+                h (1,1) double = [];
+            end
+
             obj.figure.Position.LeftHalf       = [1.8      41.8    766.4   740.8];
             obj.figure.Position.RightHalf      = [769.8    41.8    766.4   740.8];
             obj.figure.Position.FullScreen     = [1        41      1536    748.8];
@@ -49,6 +54,12 @@ classdef SDopts < handle
             obj.LMI.solverOptions = sdpsettings('verbose', 0, 'solver', 'mosek');
             obj.LMI.numericalAccuracy = 1e-8;
             obj.LMI.backoffFactor = 1.01;
+
+            obj.simulation.rule = 1;
+            obj.simulation.RelTol = 1e-6;
+            obj.simulation.MaxStep = h;
+            obj.simulation.options = odeset('RelTol', obj.simulation.RelTol, 'MaxStep', obj.simulation.MaxStep);
+            obj.simulation.Tend = 100*h;
 
             obj.reconstructor = 'ZOH';
         end

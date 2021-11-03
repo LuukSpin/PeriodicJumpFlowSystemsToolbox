@@ -1,24 +1,30 @@
-function [Controller, gamma] = JFHinfsyn(OpenLoopJFSystem, h)
+function [Controller, gamma] = JFHinfsyn(OpenLoopJFSystem, h, opts)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
-backoff = 1.01;
-numAcc = 1e-8;
+arguments
+    OpenLoopJFSystem    (1,1) OpenLoopJumpFlowSystem
+    h                   (1,1) double
+    opts                (1,1) SDopts = SDopts();
+end
+
+backoff = opts.LMI.backoffFactor;
+numAcc = opts.LMI.numericalAccuracy;
 
 % Dimensions;
-nx = size(OpenLoopJFSystem.Ac, 1);
+nx = OpenLoopJFSystem.nx;
 nc = nx;
-nu = size(OpenLoopJFSystem.Bud, 2);
-ny = size(OpenLoopJFSystem.Cy, 1);
+nu = OpenLoopJFSystem.nu;
+ny = OpenLoopJFSystem.ny;
 
 % LMI variables
-Y = sdpvar(nx, nx, 'symmetric');
-X = sdpvar(nc, nc, 'symmetric');
-Gamma = sdpvar(nx, nc, 'full');
-Theta = sdpvar(nx, ny, 'full');
-Upsilon = sdpvar(nu, nc, 'full');
-Omega = sdpvar(nu, ny, 'full');
+sdpVariables.Y = sdpvar(nx, nx, 'symmetric');
+sdpVariables.X = sdpvar(nc, nc, 'symmetric');
+sdpVariables.Gamma = sdpvar(nx, nc, 'full');
+sdpVariables.Theta = sdpvar(nx, ny, 'full');
+sdpVariables.Upsilon = sdpvar(nu, nc, 'full');
+sdpVariables.Omega = sdpvar(nu, ny, 'full');
 
 % Bisection settings
 Nmax = 100; %Maximum numbers of iterations
@@ -39,11 +45,11 @@ while N < Nmax
         gamma = mean(a);
         
         % Fill the H-infinity LMI
-        [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopJFSystem, X, Y, h, gamma, Gamma, Theta, Upsilon, Omega);
+        [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopJFSystem, sdpVariables, h, gamma);
         HinfLMI = (HinfLMIMatrix+HinfLMIMatrix')/2 >= numAcc*eye(size(HinfLMIMatrix));
         
         % Add a constraint
-        constraint = [Y, eye(nx, nc); eye(nc, nx), X] >= numAcc*eye(size(blkdiag(Y, X)));
+        constraint = [sdpVariables.Y, eye(nx, nc); eye(nc, nx), sdpVariables.X] >= numAcc*eye(size(blkdiag(sdpVariables.Y, sdpVariables.X)));
         
         opts = LS.opts;
         rng(1);
@@ -79,18 +85,18 @@ else
 end
 
 % Give values to the LMI variables in order to calculate the controller
-Y_value = value(Y);
-X_value = value(X);
-Gamma_value = value(Gamma);
-Theta_value = value(Theta);
-Upsilon_value = value(Upsilon);
-Omega_value = value(Omega);
+Y_value = value(sdpVariables.Y);
+X_value = value(sdpVariables.X);
+Gamma_value = value(sdpVariables.Gamma);
+Theta_value = value(sdpVariables.Theta);
+Upsilon_value = value(sdpVariables.Upsilon);
+Omega_value = value(sdpVariables.Omega);
 
 U = X_value;
 V = inv(X_value)-Y_value;
 
 % Calculate controller
-controllerMat = [V, Y_value*A_bar*Q_bar; zeros(nu, size(V, 2)), eye(nu)]\[Gamma_value-Y_value*A_bar*Z_bar*X_value, Theta_value; Upsilon_value, Omega_value]/[U', zeros(size(Y, 1), ny); W_bar*X_value, eye(ny)];
+controllerMat = [V, Y_value*A_bar*Q_bar; zeros(nu, size(V, 2)), eye(nu)]\[Gamma_value-Y_value*A_bar*Z_bar*X_value, Theta_value; Upsilon_value, Omega_value]/[U', zeros(size(Y_value, 1), ny); W_bar*X_value, eye(ny)];
 Controller = minreal(ss(controllerMat(1:nc, 1:nc), controllerMat(1:nc, nc+1:end), controllerMat(nc+1:end, 1:nc), controllerMat(nc+1:end, nc+1:end), h), [], false);
 
 K_zpk = zpk(Controller);
@@ -101,7 +107,7 @@ nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
 nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
 
 if nrUnstabPole+nrNonMinPhaseZero>0
-    [Controller, gamma] = controllerConditioning(OpenLoopJFSystem, gamma, X, Y, Gamma, Theta, Upsilon, Omega, backoff, numAcc, h);
+    [Controller, gamma] = controllerConditioning(OpenLoopJFSystem, gamma, sdpVariables, opts, h);
 end
 
 

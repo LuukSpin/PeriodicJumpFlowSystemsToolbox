@@ -1,16 +1,30 @@
-function [Controller, gamValue] = controllerConditioning(OpenLoopJFSystem, gamma, X, Y, Gamma, Theta, Upsilon, Omega, backoff, numAcc, h)
+function [Controller, gamValue] = controllerConditioning(OpenLoopJFSystem, gamma, sdpVariableStruct, h, optsSD)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
-% Make sure that gamma is a number not a sdp-variable
-if isa(gamma, 'sdpvar')
-    gamma = value(gamma);
+
+arguments
+    OpenLoopJFSystem    (1,1) OpenLoopJumpFlowSystem
+    gamma               (1,1) double
+    sdpVariableStruct   struct
+    h                   (1,1) double
+    optsSD              SDopts = SDopts();
 end
 
+backoff = optsSD.LMI.backoffFactor;
+numAcc = optsSD.LMI.numericalAccuracy;
 alphabackoff = 25;
 wellConditioned = false;
 maxIt = ceil(log(2)/log(backoff));
 counter = 0;
+
+% sdp variables
+Y = sdpVariableStruct.Y;
+X = sdpVariableStruct.X;
+Gamma = sdpVariableStruct.Gamma;
+Theta = sdpVariableStruct.Theta;
+Upsilon = sdpVariableStruct.Upsilon;
+Omega = sdpVariableStruct.Omega;
 
 while ~wellConditioned && (counter < maxIt)
     
@@ -43,7 +57,7 @@ while ~wellConditioned && (counter < maxIt)
     
     diagnostics = optimize(LMI, alpha, opts.LMI);
     
-    alphaValue = value(alpha)*20;
+    alphaValue = value(alpha)*alphabackoff;
     LMI = replace(LMI, alpha, alphaValue);
     diagnostics = optimize(LMI, [], opts.LMI);
     

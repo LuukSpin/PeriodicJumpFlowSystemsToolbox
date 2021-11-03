@@ -1,10 +1,20 @@
-function [t, zc,k, zd] = jumpflowSim(objFJ, wc, wd, Tend, rule, options, h)
+function [t, zc,k, zd] = jumpflowSim(objFJ, wc, wd, h, opts)
 %wc and wd should be function handles, otherwise the HyEQsolver cannot
 %produce an output.
+
+arguments
+    objFJ   (1,1) JumpFlowSystem
+    wc
+    wd
+    h       (1,1) double
+    opts    SDopts = SDopts(h)
+end
+
+
 % Rule for jumps
 % rule = 1 -> priority for jumps
 % rule = 2 -> priority for flows
-TSPAN = [0 Tend]; % simulation time interval
+TSPAN = [0 opts.simulation.Tend]; % simulation time interval
 JSPAN = [0 ceil(TSPAN(2)/h)]; % simulation interval for discrete jumps
 
 % Flow matrices
@@ -16,7 +26,7 @@ Ad = objFJ.Ad;
 Bd = objFJ.Bwd;
 
 x0 = zeros(size(Ac, 1)+1, 1);
-[t, ~, x] = HyEQsolver(@(x,t) f(x,wc(t), Ac, Bc), @(x,t) g(x,Ad,Bd,wd(t)), @(x) flowset(x,h), @(x) jumpset(x,h), x0,TSPAN,JSPAN,rule,options);
+[t, ~, x] = HyEQsolver(@(x,t) f(x,wc(t), Ac, Bc), @(x,t) g(x,Ad,Bd,wd(t)), @(x) flowset(x,h), @(x) jumpset(x,h), x0, TSPAN, JSPAN, obj.simulation.rule, obj.simulation.options);
 ind = find(abs(x(:, end) - h) < 1e-9);
 xi = x(:, 1:end-1);
 k = t(ind);

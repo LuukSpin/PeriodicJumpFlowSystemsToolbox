@@ -1,7 +1,7 @@
-function [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopJFSystem, X, Y, h, gamma, Gamma, Theta, Upsilon, Omega)
+function [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopJFSystem, sdpVariableStruct, h, gamma)
 
 %Calculate closed-loop flow matrices from the open-loop Jump/Flow system
-[Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = closedLoopFlowMatrices(OpenLoopJFSystem);
+[Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopJFSystem.ClosedLoopFlowMatrices();
 
 %Calculate Hamiltonian using the closed-loop flow matrices and determien A, B and C_hat
 [A_hat, B_hat, C_hat] = HamiltonianJF(Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF, gamma, h);
@@ -11,7 +11,7 @@ rb = size(B_hat, 2);
 rc = size(C_hat, 1);
 
 % Truncate matrices to fit into the LMI
-nx = size(OpenLoopJFSystem.Ac, 1);
+nx = OpenLoopJFSystem.nx;
 A_bar = A_hat(1:nx, 1:nx);
 B_bar = B_hat(1:nx, :);
 C_bar = C_hat(:, 1:nx);
@@ -26,6 +26,14 @@ R_bar = OpenLoopJFSystem.Dy_wd;
 Cd_bar = OpenLoopJFSystem.Czd;
 D_bar = OpenLoopJFSystem.Dzd_u;
 Ddd_p = OpenLoopJFSystem.Dzd_wd;
+
+% sdp variables
+Y = sdpVariableStruct.Y;
+X = sdpVariableStruct.X;
+Gamma = sdpVariableStruct.Gamma;
+Theta = sdpVariableStruct.Theta;
+Upsilon = sdpVariableStruct.Upsilon;
+Omega = sdpVariableStruct.Omega;
 
 %Dimensions
 nc = size(X, 1);

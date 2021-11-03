@@ -150,7 +150,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             %   x^+    = Ad*x  + Bwd*w_d    + Bud*\hat{u}
             %   z_c    = Czc*x + Dzc_wc*w_c
             %   z_d    = Czd*x + Dzd_wd*w_d + Dzd_u*\hat{u}
-            %   y      = Cy*x  + Dy_wd*w_d
+            %   y      = Cy*x  + Dy_wd*w_d + Dy_u*\hat{u}
             %
             %   The closed-loop jump flow system has the following state-space
             %   realization
@@ -215,7 +215,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             % feed-through terms
             wellPosednessMatrix = [eye(y2), -Dyu2; -Dyu1, eye(y1)];
             if det(wellPosednessMatrix) == 0
-                error('This interconnection is not well-posed, and hence the interconnection will not result in a non-causal system. The interconnection is aborted.');
+                error('This interconnection is not well-posed, and hence the interconnection will result in a non-causal system. The interconnection is aborted.');
             end
 
             % Flow and continuous-time performance channels matrices
@@ -247,7 +247,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             % Jump and discrete-time performance channels matrices
             Ad = [Ad1 + Bu1/R21*Dyu2*Cy1, Bu1/R21*Cy2; Bu2/R12*Cy1, Ad2 + Bu2/R12*Dyu1*Cy2];
             Bwd = [Bd1 + Bu1/R21*Dyu2*Dyd1, Bu1/R21*Dyd2; Bu2/R12*Dyd1, Bd2 + Bu2/R12*Dyu1*Dyd2];
-            Czd = [Cd1 + Ddu1/R21*Dyu2*Dyd1, Ddu1/R21*Dyd2; Ddu2/R12*Dyd1, Cd2 + Ddu2/R12*Dyu1*Dyd2];
+            Czd = [Cd1 + Ddu1/R21*Dyu2*Cy1, Ddu1/R21*Cy2; Ddu2/R12*Cy1, Cd2 + Ddu2/R12*Dyu1*Cy2];
             Dzd_wd = [Ddd1 + Ddu1/R21*Dyu2*Dyd1, Ddu1/R21*Dyd2; Ddu2/R12*Dyd1, Ddd2 + Ddu2/R12*Dyu1*Dyd2];
 
             objJF = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);

@@ -6,7 +6,7 @@ arguments
     discreteController {mustBeA(discreteController, ["ss", "tf"])}
 end
 
-discreteController = minreal(ss(discreteController));
+discreteController = minreal(ss(discreteController), [], false);
 
 % Check if the controller is discrete-time controller
 if discreteController.Ts == 0
