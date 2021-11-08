@@ -1,4 +1,4 @@
-function [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamma)
+function [HinfLMIMatrix, A_bar, Ad, Bud, Cy] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamma)
 
 %Calculate closed-loop flow matrices from the open-loop Jump/Flow system
 [Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopSDSystem.ClosedLoopFlowMatrices();
@@ -18,14 +18,14 @@ C_bar = C_hat(:, 1:nx);
 
 % Use these matrices to comply with Mannes Dreef definition of matrices
 % used in the LMI
-Z_bar = OpenLoopSDSystem.Ad;
-Q_bar = OpenLoopSDSystem.Bud;
-W_bar = OpenLoopSDSystem.Cy;
-E_bar = OpenLoopSDSystem.Bwd;
-R_bar = OpenLoopSDSystem.Dy_wd;
-Cd_bar = OpenLoopSDSystem.Czd;
-D_bar = OpenLoopSDSystem.Dzd_u;
-Ddd_p = OpenLoopSDSystem.Dzd_wd;
+Ad = OpenLoopSDSystem.Ad;
+Bud = OpenLoopSDSystem.Bud;
+Cy = OpenLoopSDSystem.Cy;
+Bwd = OpenLoopSDSystem.Bwd;
+Dy_wd = OpenLoopSDSystem.Dy_wd;
+Czd = OpenLoopSDSystem.Czd;
+Dzd_u = OpenLoopSDSystem.Dzd_u;
+Dzd_wd = OpenLoopSDSystem.Dzd_wd;
 
 % sdp variables
 Y = sdpVariableStruct.Y;
@@ -37,8 +37,8 @@ Omega = sdpVariableStruct.Omega;
 
 %Dimensions
 nc = size(X, 1);
-nwd = size(Ddd_p, 2);
-nzd = size(Ddd_p, 1);
+nwd = size(Dzd_wd, 2);
+nzd = size(Dzd_wd, 1);
 
 h_tmp = 1;
 %Diagonal entries
@@ -58,24 +58,24 @@ entry32 = zeros(nwd, nc);
 entry41 = zeros(rb, nc);
 entry42 = zeros(rb, nc);
 entry43 = zeros(rb, nwd);
-entry51 = Y*A_bar*Z_bar+Theta*W_bar;
+entry51 = Y*A_bar*Ad+Theta*Cy;
 entry52 = Gamma;
-entry53 = Y*A_bar*E_bar+Theta*R_bar;
+entry53 = Y*A_bar*Bwd+Theta*Dy_wd;
 entry54 = Y*B_bar;
-entry61 = A_bar*(Z_bar+Q_bar*Omega*W_bar);
-entry62 = A_bar*(Z_bar*X+Q_bar*Upsilon);
-entry63 = A_bar*(E_bar+Q_bar*Omega*R_bar);
+entry61 = A_bar*(Ad+Bud*Omega*Cy);
+entry62 = A_bar*(Ad*X+Bud*Upsilon);
+entry63 = A_bar*(Bwd+Bud*Omega*Dy_wd);
 entry64 = B_bar;
 entry65 = eye(nc);
-entry71 = C_bar*(Z_bar+Q_bar*Omega*W_bar);
-entry72 = C_bar*(Z_bar*X+Q_bar*Upsilon);
-entry73 = C_bar*(E_bar+Q_bar*Omega*R_bar);
+entry71 = C_bar*(Ad+Bud*Omega*Cy);
+entry72 = C_bar*(Ad*X+Bud*Upsilon);
+entry73 = C_bar*(Bwd+Bud*Omega*Dy_wd);
 entry74 = zeros(rc, rb);
 entry75 = zeros(rc, nc);
 entry76 = zeros(rc, nc);
-entry81 = Cd_bar+D_bar*Omega*W_bar;
-entry82 = Cd_bar*X+D_bar*Upsilon;
-entry83 = Ddd_p+D_bar*Omega*R_bar;
+entry81 = Czd+Dzd_u*Omega*Cy;
+entry82 = Czd*X+Dzd_u*Upsilon;
+entry83 = Dzd_wd+Dzd_u*Omega*Dy_wd;
 entry84 = zeros(nzd, rb);
 entry85 = zeros(nzd, nc);
 entry86 = zeros(nzd, nc);

@@ -9,7 +9,6 @@ arguments
     opts                (1,1) SDopts = SDopts();
 end
 
-backoff = opts.LMI.backoffFactor;
 numAcc = opts.LMI.numericalAccuracy;
 
 % Dimensions;
@@ -45,7 +44,7 @@ while N < Nmax
         gamma = mean(a);
         
         % Fill the H-infinity LMI
-        [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariables, h, gamma);
+        [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariables, h, gamma);
         HinfLMI = (HinfLMIMatrix+HinfLMIMatrix')/2 >= numAcc*eye(size(HinfLMIMatrix));
         
         % Add a constraint
@@ -84,31 +83,7 @@ else
     return
 end
 
-% Give values to the LMI variables in order to calculate the controller
-Y_value = value(sdpVariables.Y);
-X_value = value(sdpVariables.X);
-Gamma_value = value(sdpVariables.Gamma);
-Theta_value = value(sdpVariables.Theta);
-Upsilon_value = value(sdpVariables.Upsilon);
-Omega_value = value(sdpVariables.Omega);
-
-U = X_value;
-V = inv(X_value)-Y_value;
-
-% Calculate controller
-controllerMat = [V, Y_value*A_bar*Q_bar; zeros(nu, size(V, 2)), eye(nu)]\[Gamma_value-Y_value*A_bar*Z_bar*X_value, Theta_value; Upsilon_value, Omega_value]/[U', zeros(size(Y_value, 1), ny); W_bar*X_value, eye(ny)];
-Controller = minreal(ss(controllerMat(1:nc, 1:nc), controllerMat(1:nc, nc+1:end), controllerMat(nc+1:end, 1:nc), controllerMat(nc+1:end, nc+1:end), h), [], false);
-
-K_zpk = zpk(Controller);
-K_zeros = K_zpk.z{:};
-K_poles = K_zpk.p{:};
-
-nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
-nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
-
-if nrUnstabPole+nrNonMinPhaseZero>0
-    [Controller, gamma] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariables, opts, h);
-end
+[Controller, gamma] = controllerConstruction(OpenLoopSDSystem, A_bar, gamma, sdpVariableStruct, h, optsSD);
 
 CLJFSystem = OpenLoopSDSystem.lft(Controller);
 

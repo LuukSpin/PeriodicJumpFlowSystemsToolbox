@@ -29,6 +29,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
     end
 
     methods
+        %% Constructor
         function obj = OpenLoopSampledDataSystem(Ac, Bwc, Ad, Bwd, Bud, Czc, Dzc_wc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u)
 
             % Here the arguments is setup such that the input arguments are
@@ -116,6 +117,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             obj.Loop = 'Open';
         end
 
+        %% Dimensions
         % When OpenLoopSampledDataSystem.nu is called it is calculated based on the
         % Buc property
         function nu = get.nu(OpenLoopSampledDataSystem)
@@ -128,6 +130,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             ny = size(OpenLoopSampledDataSystem.Cy, 1);
         end
 
+        %% Operator overloading
         % Override the uplus operator for OpenLoopSampledDataSystem class object
         function SDSystem = uplus(objSD)
             arguments
@@ -301,6 +304,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             SDSystem = OpenLoopSampledDataSystem(Ac, Bwc, Ad, Bwd, Bud, Czc, Dzc_wc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
         end
         
+        %% Sampled-data specific methods
         % Calculate closed-loop jump-flow system based on the
         % interconnection
         function objJF = lft(OLSDSystem1, OLSDSystem2)

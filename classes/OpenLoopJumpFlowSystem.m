@@ -41,7 +41,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
     end
 
     methods
-        % Constructor
+        %% Constructor
         function obj = OpenLoopJumpFlowSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_ud, Cyc, Dyc_wc, Dyc_uc, Cyd, Dyd_wd, Dyd_ud)
 
             % Here the arguments is setup such that the input arguments are
@@ -177,6 +177,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             obj.Loop = 'Open';
         end
 
+        %% Dimensions
         % When OpenLoopJumpFlowSystem.nuc is called it is calculated based on the
         % Buc property
         function nuc = get.nuc(OpenLoopJumpFlowSystem)

@@ -94,7 +94,7 @@ while ~wellConditioned && (counter < maxIt)
     nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
     
     if (nrUnstabPole+nrNonMinPhaseZero) ~= 0
-        backoff = backoff*1.01;
+        backoff = backoff*optsSD.LMI.backoffFactor;
     else
         wellConditioned = true;
     end
