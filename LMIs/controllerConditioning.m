@@ -1,10 +1,10 @@
-function [Controller, gamValue] = controllerConditioning(OpenLoopJFSystem, gamma, sdpVariableStruct, h, optsSD)
+function [Controller, gamValue] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariableStruct, h, optsSD)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
 arguments
-    OpenLoopJFSystem    (1,1) OpenLoopJumpFlowSystem
+    OpenLoopSDSystem    (1,1) OpenLoopSampledDataSystem
     gamma               (1,1) double
     sdpVariableStruct   struct
     h                   (1,1) double
@@ -29,8 +29,8 @@ Omega = sdpVariableStruct.Omega;
 while ~wellConditioned && (counter < maxIt)
     
     % Dimensions;
-    nu = size(OpenLoopJFSystem.Bud, 2);
-    ny = size(OpenLoopJFSystem.Cy, 1);
+    nu = size(OpenLoopSDSystem.Bud, 2);
+    ny = size(OpenLoopSDSystem.Cy, 1);
     nx = size(Y, 1);
     nc = size(X, 1);
     opts = LS.opts;
@@ -38,7 +38,7 @@ while ~wellConditioned && (counter < maxIt)
     LMI = [];
     
     gamValue = gamma*backoff;
-    [HinfLMI, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopJFSystem, X, Y, h, gamValue, Gamma, Theta, Upsilon, Omega);
+    [HinfLMI, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopSDSystem, X, Y, h, gamValue, Gamma, Theta, Upsilon, Omega);
     LMI = [LMI; (HinfLMI+HinfLMI')/2 >= numAcc*eye(size(HinfLMI))];
     posDefConstraint = [Y, eye(nx, nc); eye(nc, nx), X];
     LMI = [LMI; posDefConstraint >= numAcc*eye(size(posDefConstraint))];

@@ -1,31 +1,31 @@
-function [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopJFSystem, sdpVariableStruct, h, gamma)
+function [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamma)
 
 %Calculate closed-loop flow matrices from the open-loop Jump/Flow system
-[Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopJFSystem.ClosedLoopFlowMatrices();
+[Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopSDSystem.ClosedLoopFlowMatrices();
 
 %Calculate Hamiltonian using the closed-loop flow matrices and determien A, B and C_hat
-[A_hat, B_hat, C_hat] = HamiltonianJF(Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF, gamma, h);
+[A_hat, B_hat, C_hat] = HamiltonianSD(Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF, gamma, h);
 
 % Determine rank of B_hat and C_hat
 rb = size(B_hat, 2);
 rc = size(C_hat, 1);
 
 % Truncate matrices to fit into the LMI
-nx = OpenLoopJFSystem.nx;
+nx = OpenLoopSDSystem.nx;
 A_bar = A_hat(1:nx, 1:nx);
 B_bar = B_hat(1:nx, :);
 C_bar = C_hat(:, 1:nx);
 
 % Use these matrices to comply with Mannes Dreef definition of matrices
 % used in the LMI
-Z_bar = OpenLoopJFSystem.Ad;
-Q_bar = OpenLoopJFSystem.Bud;
-W_bar = OpenLoopJFSystem.Cy;
-E_bar = OpenLoopJFSystem.Bwd;
-R_bar = OpenLoopJFSystem.Dy_wd;
-Cd_bar = OpenLoopJFSystem.Czd;
-D_bar = OpenLoopJFSystem.Dzd_u;
-Ddd_p = OpenLoopJFSystem.Dzd_wd;
+Z_bar = OpenLoopSDSystem.Ad;
+Q_bar = OpenLoopSDSystem.Bud;
+W_bar = OpenLoopSDSystem.Cy;
+E_bar = OpenLoopSDSystem.Bwd;
+R_bar = OpenLoopSDSystem.Dy_wd;
+Cd_bar = OpenLoopSDSystem.Czd;
+D_bar = OpenLoopSDSystem.Dzd_u;
+Ddd_p = OpenLoopSDSystem.Dzd_wd;
 
 % sdp variables
 Y = sdpVariableStruct.Y;

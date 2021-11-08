@@ -13,7 +13,7 @@ classdef SDopts < handle
         % Constructor
         function obj = SDopts(h)
             arguments
-                h (1,1) double = [];
+                h double = [];
             end
 
             obj.figure.Position.LeftHalf       = [1.8      41.8    766.4   740.8];

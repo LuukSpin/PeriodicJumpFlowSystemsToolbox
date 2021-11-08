@@ -1,20 +1,30 @@
 classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
-    %UNTITLED11 Summary of this class goes here
-    %   Detailed explanation goes here
-    
+    %JumpFlowSystem is a constructor for this class
+    %   JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd)
+    %   constructs a closed-loop jump-flow system. This is a
+    %   closed-loop sampled data system where a Zero-Order-Hold is
+    %   used to connect the discrete-time controller output with
+    %   the continuous-time plant. This system has the following
+    %   state-space realization:
+    %
+    %  \dot{x} = Ac*x  + Bwc*w_c
+    %   x^+    = Ad*x  + Bwd*w_d
+    %   z_c    = Czc*x + Dzc_wc*w_c
+    %   z_d    = Czd*x + Dzd_wd*w_d
+
     properties
         %Flow matrices
         Ac      double {mustBeFinite(Ac)}
         Bwc     double {mustBeFinite(Bwc)}
-        
+
         %Jump Matrices
         Ad      double {mustBeFinite(Ad)}
         Bwd     double {mustBeFinite(Bwd)}
-        
+
         %Continuous-time performance channel matrices
         Czc     double {mustBeFinite(Czc)}
         Dzc_wc  double {mustBeFinite(Dzc_wc)}
-        
+
         %Discrete-time performance channel matrices
         Czd     double {mustBeFinite(Czd)}
         Dzd_wd  double {mustBeFinite(Dzd_wd)}
@@ -27,27 +37,15 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
         nwd     (1,1) double
         nzd     (1,1) double
     end
-    
-    properties (GetAccess = 'public', SetAccess = ?OpenLoopJumpFlowSystem)
+
+    properties (GetAccess = 'public', SetAccess = {?OpenLoopJumpFlowSystem, ?OpenLoopSampledDataSystem})
         Loop = 'Closed'
     end
-    
-    % Constructor
+
     methods
+        % Constructor
         function obj = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd)
-            %JumpFlowSystem is a constructor for this class
-            %   JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd)
-            %   constructs a closed-loop jump-flow system. This is a
-            %   closed-loop sampled data system where a Zero-Order-Hold is
-            %   used to connect the discrete-time controller output with
-            %   the continuous-time plant. This system has the following
-            %   state-space realization:
-            %
-            %  \dot{x} = Ac*x  + Bwc*w_c
-            %   x^+    = Ad*x  + Bwd*w_d
-            %   z_c    = Czc*x + Dzc_wc*w_c
-            %   z_d    = Czd*x + Dzd_wd*w_d
-            
+
             % Here the arguments is setup such that the input arguments are
             % variable. That means that this constructor accepts 0 up to 8
             % input arguments. However, no more than 8 input arguments is
@@ -87,7 +85,7 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
             nwd = size(Bwd, 2);
 
             if nx ~= size(Czc, 2)
-               error('The number of columns of "Czc" does not match the state dimension');
+                error('The number of columns of "Czc" does not match the state dimension');
             end
 
             nzc = size(Czc, 1);
@@ -130,7 +128,7 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
             obj.Czd = Czd;
             obj.Dzd_wd = Dzd_wd;
         end
-        
+
         % When JumpFlowSystem.nx is called it is calculated based on the
         % Ac property
         function nx = get.nx(JumpFlowSystem)
@@ -161,12 +159,183 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
             nzd = size(JumpFlowSystem.Czd, 1);
         end
 
+        % Override the uplus operator for JumpFlowSystem class object
+        function JFSystem = uplus(objJF)
+            arguments
+                objJF (1,1) JumpFlowSystem
+            end
+
+            JFSystem = objJF;
+        end
+
+        % Override the uminus operator for JumpFlowSystem class object
+        function JFSystem = uminus(objJF)
+            arguments
+                objJF (1,1) JumpFlowSystem
+            end
+
+            Ac = objJF.Ac;
+            Bwc = objJF.Bwc;
+            Ad = objJF.Ad;
+            Bwd = objJF.Bwd;
+            Czc = -objJF.Czc;
+            Dzc_wc = -objJF.Dzc_wc;
+            Czd = -objJF.Czd;
+            Dzd_wd = -objJF.Dzd_wd;
+
+            JFSystem = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
+        end
+
+        % Override the plus operator for JumpFlowSystem class object
+        function JFSystem = plus(obj1, obj2)
+            arguments
+                obj1 (1,1) JumpFlowSystem
+                obj2 (1,1) JumpFlowSystem
+            end
+
+            Ac = blkdiag(obj1.Ac, obj2.Ac);
+            Bwc = [obj1.Bwc; obj2.Bwc];
+            Ad = blkdiag(obj1.Ad, obj2.Ad);
+            Bwd = [obj1.Bwd; obj2.Bwd];
+            Czc = [obj1.Czc, obj2.Czc];
+            Dzc_wc = obj1.Dzc_wc+obj2.Dzc_wc;
+            Czd = [obj1.Czd, obj2.Czd];
+            Dzd_wd = obj1.Dzd_wd+obj2.Dzd_wd;
+
+            JFSystem = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
+        end
+
+        % Override the minus operator for JumpFlowSystem class object
+        function JFSystem = minus(obj1, obj2)
+            arguments
+                obj1 (1,1) JumpFlowSystem
+                obj2 (1,1) JumpFlowSystem
+            end
+
+            JFSystem = obj1 + (-obj2);
+        end
+
+        % Override the mtimes operator for JumpFlowSystem class object
+        function JFSystem = mtimes(obj1, obj2)
+        % MTIMES specifies the multiplication operator * for jump-flow
+        % systems
+        %   Multiplication of jump-flow systems specifies a series
+        %   connection of system that looks like the following block
+        %   diagram:
+        %   
+        %   
+            arguments
+                obj1 (1,1) JumpFlowSystem
+                obj2 (1,1) JumpFlowSystem
+            end
+
+            nx1 = obj2.nx;
+            nx2 = obj1.nx;
+            nzc1 = obj2.nzc;
+            nzd1 = obj2.nzd;
+            nwc2 = obj1.nwc;
+            nwd2 = obj1.nwd;
+
+            if nzc1 ~= nwc2
+                error('The amount of continuous-time performance channels of the first system is not equal to the amount of continuous-time disturbance channels of the second system.');
+            end
+
+            if nzd1 ~= nwd2
+                error('The amount of discrete-time performance channels of the first system is not equal to the amount of discrete-time disturbance channels of the second system.');
+            end
+
+            Ac = [obj2.Ac, zeros(nx1, nx2); obj1.Bwc*obj2.Czc, obj1.Ac];
+            Bwc = [obj2.Bwc; obj1.Bwc*obj2.Dzc_wc];
+            Ad = [obj2.Ad, zeros(nx1, nx2); obj1.Bwd*obj2.Czd, obj1.Ad];
+            Bwd = [obj2.Bwd; obj1.Bwd*obj2.Dzd_wd];
+
+            Czc = [obj1.Dzc_wc*obj2.Czc, obj1.Czc];
+            Dzc_wc = obj1.Dzc_wc*obj2.Dzc_wc;
+            Czd = [obj1.Dzd_wd*obj2.Czd, obj1.Czd];
+            Dzd_wd = obj1.Dzd_wd*obj2.Dzd_wd;
+
+            JFSystem = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
+
+        end
+        
+        % Override the horzcat operator for JumpFlowSystem class object
+        function JFSystem = horzcat(obj1, obj2)
+            arguments
+                obj1 (1,1) JumpFlowSystem
+                obj2 (1,1) JumpFlowSystem
+            end
+
+            Ac = blkdiag(obj1.Ac, obj2.Ac);
+            Bwc = blkdiag(obj1.Bwc, obj2.Bwc);
+            Ad = blkdiag(obj1.Ad, obj2.Ad);
+            Bwd = blkdiag(obj1.Bwd, obj2.Bwd);
+
+            Czc = [obj1.Czc, obj2.Czc];
+            Dzc_wc = [obj1.Dzc_wc, obj2.Dzc_wc];
+            Czd = [obj1.Czd, obj2.Czd];
+            Dzd_wd = [obj1.Dzd_wd, obj2.Dzd_wd];
+
+            JFSystem = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
+        end
+
+        % Override the vertcat operator for JumpFlowSystem class object
+        function JFSystem = vertcat(obj1, obj2)
+            arguments
+                obj1 (1,1) JumpFlowSystem
+                obj2 (1,1) JumpFlowSystem
+            end
+
+            Ac = blkdiag(obj1.Ac, obj2.Ac);
+            Bwc = [obj1.Bwc; obj2.Bwc];
+            Ad = blkdiag(obj1.Ad, obj2.Ad);
+            Bwd = [obj1.Bwd; obj2.Bwd];
+
+            Czc = blkdiag(obj1.Czc, obj2.Czc);
+            Dzc_wc = [obj1.Dzc_wc; obj2.Dzc_wc];
+            Czd = blkdiag(obj1.Czd, obj2.Czd);
+            Dzd_wd = [obj1.Dzd_wd; obj2.Dzd_wd];
+
+            JFSystem = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
+        end
+
         % Stability function
         function stabilityFlag = isstable(JumpFlowSystem, h)
             stabilityFlag = all(abs(eig(expm(JumpFlowSystem.Ac*h)*JumpFlowSystem.Ad)) < 1);
         end
+
+        % Perform analysis for various system gains and norms
+        function normValue = analysis(CLJFSystem, performanceIndicator, h)
+
+            arguments
+                CLJFSystem              (1,1) JumpFlowSystem
+                performanceIndicator    (1,1) string
+                h                       (1,1) double
+            end
+
+            % Check stability
+            if ~CLJFSystem.isstable(h)
+                error('The system is not stable and hence does not have a finite norm of any kind.');
+            end
+
+            % Check all specified system norms such as Hinf, H2, H2g, L1
+            switch performanceIndicator
+                case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
+                    normValue = JFHinfAnalysis(CLJFSystem, h);
+                case {'H2', 'h2'}
+                    warning('The H2 norm has yet to be implemented in the sampled-data toolbox');
+                    normValue = nan;
+                case {'H2g', 'h2g'}
+                    warning('The generalized H2 norm has yet to be implemented in the sampled-data toolbox');
+                    normValue = nan;
+                case {'L1', 'l1'}
+                    warning('The L1 norm has yet to be implemented in the sampled-data toolbox');
+                    normValue = nan;
+                otherwise
+                    error('The chosen performance indicator string is not a valid choice as it does not represent a system norm or gain.');
+            end
+        end
     end
-    
+
     methods (Access = protected)
         function propgrp = getPropertyGroups(~)
             proplist = {'Loop', 'Ac', 'Bwc', 'Ad', 'Bwd', 'Czc', 'Dzc_wc', 'Czd', 'Dzd_wd'};

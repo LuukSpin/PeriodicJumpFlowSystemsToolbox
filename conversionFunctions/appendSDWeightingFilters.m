@@ -10,15 +10,15 @@ function weightedSDSystem = appendSDWeightingFilters(unweightedSDSystem, Wwc, Wz
 %   x^+    = x
 %   z_c    = Czc*x + Dzc_wc*w_c + Dzc_u*u
 %   z_d    = Czd*x + Dzd_wd*w_d + Dzd_u*\hat{u}
-%   y      = Cy*x  + Dy_wd*w_d
+%   y      = Cy*x  + Dy_wd*w_d  + Dy_u*\hat{u}
 %
 %  Into a SD system with state-space realization of the form:
 %
 %  \dot{x} = Ac*x  + Bwc*w_c    + Buc*u
 %   x^+    = Ad*x  + Bwd*w_d    + Bud*\hat{u}
-%   z_c    = Czc*x + Dzc_wc*w_c + Dzc_u*u
-%   z_d    = Czd*x + Dzd_wd*w_d + Dzd_u*\hat{u}
-%   y      = Cy*x  + Dy_wd*w_d
+%   z_c    = Czc*x + Dzc_wc*w_c + Dzc_uc*u
+%   z_d    = Czd*x + Dzd_wd*w_d + Dzd_ud*\hat{u}
+%   y      = Cy*x  + Dy_wd*w_d  + Dy_u*\hat{u}
 %
 %           +---------+      +--------+      +---------+
 %           |         |      |        |      |         |

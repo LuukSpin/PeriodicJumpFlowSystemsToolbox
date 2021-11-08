@@ -1,10 +1,10 @@
-function [Controller, gamma, CLJFSystem] = JFHinfsyn(OpenLoopJFSystem, h, opts)
+function [Controller, gamma, CLJFSystem] = SDHinfsyn(OpenLoopSDSystem, h, opts)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
 arguments
-    OpenLoopJFSystem    (1,1) OpenLoopJumpFlowSystem
+    OpenLoopSDSystem    (1,1) OpenLoopJumpFlowSystem
     h                   (1,1) double
     opts                (1,1) SDopts = SDopts();
 end
@@ -13,10 +13,10 @@ backoff = opts.LMI.backoffFactor;
 numAcc = opts.LMI.numericalAccuracy;
 
 % Dimensions;
-nx = OpenLoopJFSystem.nx;
+nx = OpenLoopSDSystem.nx;
 nc = nx;
-nu = OpenLoopJFSystem.nu;
-ny = OpenLoopJFSystem.ny;
+nu = OpenLoopSDSystem.nu;
+ny = OpenLoopSDSystem.ny;
 
 % LMI variables
 sdpVariables.Y = sdpvar(nx, nx, 'symmetric');
@@ -45,7 +45,7 @@ while N < Nmax
         gamma = mean(a);
         
         % Fill the H-infinity LMI
-        [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopJFSystem, sdpVariables, h, gamma);
+        [HinfLMIMatrix, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariables, h, gamma);
         HinfLMI = (HinfLMIMatrix+HinfLMIMatrix')/2 >= numAcc*eye(size(HinfLMIMatrix));
         
         % Add a constraint
@@ -107,9 +107,9 @@ nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
 nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
 
 if nrUnstabPole+nrNonMinPhaseZero>0
-    [Controller, gamma] = controllerConditioning(OpenLoopJFSystem, gamma, sdpVariables, opts, h);
+    [Controller, gamma] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariables, opts, h);
 end
 
-CLJFSystem = OpenLoopJFSystem.lft(Controller);
+CLJFSystem = OpenLoopSDSystem.lft(Controller);
 
 end

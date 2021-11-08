@@ -196,7 +196,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         end
         
         % Override the mtimes operator for OpenLoopSampledDataSystem class object
-        function SDSystem = mtimes(obj1, obj2)
+        function SDSystem = mtimes(obj5, obj2)
         % MTIMES specifies the multiplication operator * for sampled-data
         % systems
         %   Multiplication of sampled-data systems specifies a series
@@ -205,18 +205,18 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         %   
         %   
             arguments
-                obj1 (1,1) OpenLoopSampledDataSystem
+                obj5 (1,1) OpenLoopSampledDataSystem
                 obj2 (1,1) OpenLoopSampledDataSystem
             end
 
             nx1 = obj2.nx;
-            nx2 = obj1.nx;
+            nx2 = obj5.nx;
             nzc1 = obj2.nzc;
             nzd1 = obj2.nzd;
             ny1 = obj2.ny;
-            nwc2 = obj1.nwc;
-            nwd2 = obj1.nwd;
-            nu2 = obj1.nu;
+            nwc2 = obj5.nwc;
+            nwd2 = obj5.nwd;
+            nu2 = obj5.nu;
 
             if nzc1 ~= nwc2
                 error('The amount of continuous-time performance channels of the first system is not equal to the amount of continuous-time disturbance channels of the second system.');
@@ -230,22 +230,22 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
                 error('The controller input dimension of the first system does not match the controller output dimension of the second system.');
             end
 
-            Ac = [obj2.Ac, zeros(nx1, nx2); obj1.Bwc*obj2.Czc, obj1.Ac];
-            Bwc = [obj2.Bwc; obj1.Bwc*obj2.Dzc_wc];
-            Ad = [obj2.Ad, zeros(nx1, nx2); obj1.Bwd*obj2.Czd+obj1.Bud*obj2.Cy, obj1.Ad];
-            Bwd = [obj2.Bwd; obj1.Bwd*obj2.Dzd_wd+obj1.Bud*obj2.Dy_wd];
-            Bud = [obj2.Bud; obj1.Bwd*obj2.Dzd_u+obj1.Bud*obj2.Dy_u];
+            Ac = [obj2.Ac, zeros(nx1, nx2); obj5.Bwc*obj2.Czc, obj5.Ac];
+            Bwc = [obj2.Bwc; obj5.Bwc*obj2.Dzc_wc];
+            Ad = [obj2.Ad, zeros(nx1, nx2); obj5.Bwd*obj2.Czd+obj5.Bud*obj2.Cy, obj5.Ad];
+            Bwd = [obj2.Bwd; obj5.Bwd*obj2.Dzd_wd+obj5.Bud*obj2.Dy_wd];
+            Bud = [obj2.Bud; obj5.Bwd*obj2.Dzd_u+obj5.Bud*obj2.Dy_u];
 
-            Czc = [obj1.Dzc_wc*obj2.Czc, obj1.Czc];
-            Dzc_wc = obj1.Dzc_wc*obj2.Dzc_wc;
+            Czc = [obj5.Dzc_wc*obj2.Czc, obj5.Czc];
+            Dzc_wc = obj5.Dzc_wc*obj2.Dzc_wc;
 
-            Czd = [obj1.Dzd_wd*obj2.Czd+obj1.Dzd_u*obj2.Cy, obj1.Czd];
-            Dzd_wd = obj1.Dzd_wd*obj2.Dzd_wd+obj1.Dzd_u*obj2.Dy_wd;
-            Dzd_u = obj1.Dzd_wd*obj2.Dzd_u+obj1.Dzd_u*obj2.Dy_u;
+            Czd = [obj5.Dzd_wd*obj2.Czd+obj5.Dzd_u*obj2.Cy, obj5.Czd];
+            Dzd_wd = obj5.Dzd_wd*obj2.Dzd_wd+obj5.Dzd_u*obj2.Dy_wd;
+            Dzd_u = obj5.Dzd_wd*obj2.Dzd_u+obj5.Dzd_u*obj2.Dy_u;
 
-            Cy = [obj1.Dy_wd*obj2.Czd+obj1.Dy_u*obj2.Cy, obj1.Cy];
-            Dy_wd = obj1.Dy_wd*obj2.Dzd_wd+obj1.Dy_u*obj2.Dy_wd;
-            Dy_u = obj1.Dy_wd*obj2.Dzd_u+obj1.Dy_u*obj2.Dy_u;
+            Cy = [obj5.Dy_wd*obj2.Czd+obj5.Dy_u*obj2.Cy, obj5.Cy];
+            Dy_wd = obj5.Dy_wd*obj2.Dzd_wd+obj5.Dy_u*obj2.Dy_wd;
+            Dy_u = obj5.Dy_wd*obj2.Dzd_u+obj5.Dy_u*obj2.Dy_u;
 
             SDSystem = OpenLoopSampledDataSystem(Ac, Bwc, Ad, Bwd, Bud, Czc, Dzc_wc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
 
