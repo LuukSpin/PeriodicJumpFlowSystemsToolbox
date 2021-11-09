@@ -43,7 +43,7 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
     end
 
     methods
-        % Constructor
+        %% Constructor
         function obj = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd)
 
             % Here the arguments is setup such that the input arguments are
@@ -129,6 +129,7 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
             obj.Dzd_wd = Dzd_wd;
         end
 
+        %% Dimensions
         % When JumpFlowSystem.nx is called it is calculated based on the
         % Ac property
         function nx = get.nx(JumpFlowSystem)
@@ -159,6 +160,67 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
             nzd = size(JumpFlowSystem.Czd, 1);
         end
 
+        % Check dimensions of every state-space matrix of the open-loop
+        % sampled-data system
+        function dimCheck(OLSDSystem)
+            arguments
+                OLSDSystem (1,1) JumpFlowSystem
+            end
+
+            % Define dimensions
+            nx = OLSDSystem.nx;
+            nwc = OLSDSystem.nwc;
+            nwd = OLSDSystem.nwd;
+            nzc = OLSDSystem.nzc;
+            nzd = OLSDSystem.nzd;
+
+            % Check state dimension
+            if nx ~= size(OLSDSystem.Ac, 2)
+                error('The flow state matrix "Ac" must be square');
+            end
+
+            if nx ~= size(OLSDSystem.Bwc, 1)
+                error('The number of rows of "Bwc" does not match the state dimension');
+            end
+
+            if nx ~= size(OLSDSystem.Ad, 1) || nx ~= size(OLSDSystem.Ad, 2)
+                error('The dimensions of "Ac" do not match the dimensions of "Ad"');
+            end
+
+            if nx ~= size(OLSDSystem.Bwd, 1)
+                error('The number of rows of "Bwd" does not match the state dimension');
+            end
+
+            if nx ~= size(OLSDSystem.Czc, 2)
+                error('The number of columns of "Czc" does not match the state dimension');
+            end
+
+            if nx ~= size(OLSDSystem.Czd, 2)
+                error('The number of columns of "Czd" does not match the state dimension');
+            end
+
+            % Check continuous-time disturbance channels
+            if nwc ~= size(OLSDSystem.Dzc_wc, 2)
+                error('The number of columns of "Dzc_wc" does not match the amount of continuous-time disturbance channels');
+            end
+
+            % Check discrete-time disturbance channels
+            if nwd ~= size(OLSDSystem.Dzd_wd, 2)
+                error('The number of columns of "Dzd_wd" does not match the amount of continuous-time disturbance channels');
+            end
+
+            % Check continuous-time performance channels
+            if nzc ~= size(OLSDSystem.Dzc_wc, 1)
+                error('The number of rows of "Dzc_wc" does not match the amount of continuous-time performance channels');
+            end
+
+            % Check discrete-time performance channels
+            if nzd ~= size(OLSDSystem.Dzd_wd, 1)
+                error('The number of rows of "Dzd_wd" does not match the amount of discrete-time performance channels');
+            end
+        end
+
+        %% Operator overloading
         % Override the uplus operator for JumpFlowSystem class object
         function JFSystem = uplus(objJF)
             arguments

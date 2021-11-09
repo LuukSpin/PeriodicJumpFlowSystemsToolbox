@@ -92,7 +92,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             nzd = size(Czd, 1);
 
             if nzc ~= size(Dzc_uc, 1)
-                error('The number of rows of "Dzc_uc" does not match the amount of discrete-time performance channels');
+                error('The number of rows of "Dzc_uc" does not match the amount of continuous-time performance channels');
             end
 
             if nzd ~= size(Dzd_ud, 1)
@@ -103,11 +103,11 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             nuc = size(Buc, 2);
 
             if nuc ~= size(Dzc_uc, 2)
-                error('The number of columns of "Dzd_uc" does not match the controller output dimension');
+                error('The number of columns of "Dzd_uc" does not match the continuous-time controller output dimension');
             end
 
             if nud ~= size(Dzd_ud, 2)
-                error('The number of columns of "Dzd_ud" does not match the controller output dimension');
+                error('The number of columns of "Dzd_ud" does not match the discrete-time controller output dimension');
             end
 
             % Check controller input matrices
@@ -200,6 +200,138 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
         % Cydd property
         function nyd = get.nyd(OpenLoopJumpFlowSystem)
             nyd = size(OpenLoopJumpFlowSystem.Cyd, 1);
+        end
+    
+        % Check dimensions of every state-space matrix of the open-loop
+        % jump-flow system
+        function dimCheck(OLJFSystem)
+            arguments
+                OLJFSystem (1,1) OpenLoopJumpFlowSystem
+            end
+
+            % Define dimensions
+            nx = OLJFSystem.nx;
+            nwc = OLJFSystem.nwc;
+            nwd = OLJFSystem.nwd;
+            nzc = OLJFSystem.nzc;
+            nzd = OLJFSystem.nzd;
+            nuc = OLJFSystem.nuc;
+            nud = OLJFSystem.nud;
+            nyc = OLJFSystem.nyc;
+            nyd = OLJFSystem.nyd;
+
+            % Check state dimension
+            if nx ~= size(OLJFSystem.Ac, 2)
+                error('The flow state matrix "Ac" must be square');
+            end
+
+            if nx ~= size(OLJFSystem.Bwc, 1)
+                error('The number of rows of "Bwc" does not match the state dimension');
+            end
+
+            if nx ~= size(OLJFSystem.Buc, 1)
+                error('The number of rows of "Buc" does not match the state dimension');
+            end
+
+            if nx ~= size(OLJFSystem.Ad, 1) || nx ~= size(OLJFSystem.Ad, 2)
+                error('The dimensions of "Ac" do not match the dimensions of "Ad"');
+            end
+
+            if nx ~= size(OLJFSystem.Bwd, 1)
+                error('The number of rows of "Bwd" does not match the state dimension');
+            end
+
+            if nx ~= size(OLJFSystem.Bud, 1)
+                error('The number of rows of "Bud" does not match the state dimension');
+            end
+
+            if nx ~= size(OLJFSystem.Czc, 2)
+                error('The number of columns of "Czc" does not match the state dimension');
+            end
+
+            if nx ~= size(OLJFSystem.Czd, 2)
+                error('The number of columns of "Czd" does not match the state dimension');
+            end
+
+            if nx ~= size(OLJFSystem.Cyc, 2)
+                error('The number of columns of "Cyc" does not match the state dimension');
+            end
+
+            if nx ~= size(OLJFSystem.Cyd, 2)
+                error('The number of columns of "Cyd" does not match the state dimension');
+            end
+
+            % Check continuous-time disturbance channels
+            if nwc ~= size(OLJFSystem.Dzc_wc, 2)
+                error('The number of columns of "Dzc_wc" does not match the amount of continuous-time disturbance channels');
+            end
+
+            if nwc ~= size(OLJFSystem.Dyc_wc, 2)
+                error('The number of columns of "Dyc_wc" does not match the amount of continuous-time disturbance channels');
+            end
+
+            % Check discrete-time disturbance channels
+            if nwd ~= size(OLJFSystem.Dzd_wd, 2)
+                error('The number of columns of "Dzd_wd" does not match the amount of continuous-time disturbance channels');
+            end
+
+            if nwd ~= size(OLJFSystem.Dyd_wd, 2)
+                error('The number of columns of "Dyd_wd" does not match the amount of continuous-time disturbance channels');
+            end
+
+            % Check continuous-time performance channels
+            if nzc ~= size(OLJFSystem.Dzc_wc, 1)
+                error('The number of rows of "Dzc_wc" does not match the amount of continuous-time performance channels');
+            end
+
+            if nzc ~= size(OLJFSystem.Dzc_uc, 1)
+                error('The number of rows of "Dzc_uc" does not match the amount of continuous-time performance channels');
+            end
+
+            % Check discrete-time performance channels
+            if nzd ~= size(OLJFSystem.Dzd_wd, 1)
+                error('The number of rows of "Dzd_wd" does not match the amount of discrete-time performance channels');
+            end
+
+            if nzd ~= size(OLJFSystem.Dzd_ud, 1)
+                error('The number of rows of "Dzd_ud" does not match the amount of discrete-time performance channels');
+            end
+
+            % Check continuous-time controller output
+            if nuc ~= size(OLJFSystem.Dzc_uc, 2)
+                error('The number of columns of "Dzc_uc" does not match the continuous-time controller output dimension');
+            end
+
+            if nuc ~= size(OLJFSystem.Dyc_uc, 2)
+                error('The number of columns of "Dyc_uc" does not match the continuous-time controller output dimension');
+            end
+
+            % Check discrete-time controller output
+            if nud ~= size(OLJFSystem.Dzd_ud, 2)
+                error('The number of columns of "Dzd_ud" does not match the discrete-time controller output dimension');
+            end
+
+            if nud ~= size(OLJFSystem.Dyd_ud, 2)
+                error('The number of columns of "Dyd_ud" does not match the discrete-time controller output dimension');
+            end
+
+            % Check continuous-time controller input
+            if nyc ~= size(OLJFSystem.Dyc_wc, 1)
+                error('The number of rows of "Dyc_wc" does not match the continuous-time controller input dimension');
+            end
+
+            if nyc ~= size(OLJFSystem.Dyc_uc, 1)
+                error('The number of rows of "Dyc_uc" does not match the continuous-time controller input dimension');
+            end
+
+            % Check discrete-time controller input
+            if nyd ~= size(OLJFSystem.Dyd_wd, 1)
+                error('The number of rows of "Dyd_wd" does not match the discrete-time controller input dimension');
+            end
+
+            if nyd ~= size(OLJFSystem.Dyd_ud, 1)
+                error('The number of rows of "Dyd_ud" does not match the discrete-time controller input dimension');
+            end
         end
     end
     methods (Access = protected)

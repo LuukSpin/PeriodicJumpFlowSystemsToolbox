@@ -23,6 +23,11 @@ nwd = objJF.nwd;
 nzd = objJF.nzd;
 nyd = objJF.nyd;
 
+nyc = objJF.nyc;
+if nyc ~= size(objJF.Dyc_wc, 1) || nyc ~= size(objJF.Dyc_uc, 1) || nyc ~= 0
+    error('The continuous-time controller input must have a dimension of 0, this must be agreed upon by the matrices "Cyc", "Dyc_wc" and "Dyc_uc"!');
+end
+
 if strcmpi(optsSD.reconstructor, 'ZOH')
 
     % Flow matrices

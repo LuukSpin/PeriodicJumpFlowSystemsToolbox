@@ -130,6 +130,101 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             ny = size(OpenLoopSampledDataSystem.Cy, 1);
         end
 
+        % Check dimensions of every state-space matrix of the open-loop
+        % sampled-data system
+        function dimCheck(OLSDSystem)
+            arguments
+                OLSDSystem (1,1) OpenLoopSampledDataSystem
+            end
+
+            % Define dimensions
+            nx = OLSDSystem.nx;
+            nwc = OLSDSystem.nwc;
+            nwd = OLSDSystem.nwd;
+            nzc = OLSDSystem.nzc;
+            nzd = OLSDSystem.nzd;
+            nu = OLSDSystem.nu;
+            ny = OLSDSystem.ny;
+
+            % Check state dimension
+            if nx ~= size(OLSDSystem.Ac, 2)
+                error('The flow state matrix "Ac" must be square');
+            end
+
+            if nx ~= size(OLSDSystem.Bwc, 1)
+                error('The number of rows of "Bwc" does not match the state dimension');
+            end
+
+            if nx ~= size(OLSDSystem.Ad, 1) || nx ~= size(OLSDSystem.Ad, 2)
+                error('The dimensions of "Ac" do not match the dimensions of "Ad"');
+            end
+
+            if nx ~= size(OLSDSystem.Bwd, 1)
+                error('The number of rows of "Bwd" does not match the state dimension');
+            end
+
+            if nx ~= size(OLSDSystem.Bud, 1)
+                error('The number of rows of "Bud" does not match the state dimension');
+            end
+
+            if nx ~= size(OLSDSystem.Czc, 2)
+                error('The number of columns of "Czc" does not match the state dimension');
+            end
+
+            if nx ~= size(OLSDSystem.Czd, 2)
+                error('The number of columns of "Czd" does not match the state dimension');
+            end
+
+            if nx ~= size(OLSDSystem.Cy, 2)
+                error('The number of columns of "Cy" does not match the state dimension');
+            end
+
+            % Check continuous-time disturbance channels
+            if nwc ~= size(OLSDSystem.Dzc_wc, 2)
+                error('The number of columns of "Dzc_wc" does not match the amount of continuous-time disturbance channels');
+            end
+
+            % Check discrete-time disturbance channels
+            if nwd ~= size(OLSDSystem.Dzd_wd, 2)
+                error('The number of columns of "Dzd_wd" does not match the amount of continuous-time disturbance channels');
+            end
+
+            if nwd ~= size(OLSDSystem.Dy_wd, 2)
+                error('The number of columns of "Dyd_wd" does not match the amount of continuous-time disturbance channels');
+            end
+
+            % Check continuous-time performance channels
+            if nzc ~= size(OLSDSystem.Dzc_wc, 1)
+                error('The number of rows of "Dzc_wc" does not match the amount of continuous-time performance channels');
+            end
+
+            % Check discrete-time performance channels
+            if nzd ~= size(OLSDSystem.Dzd_wd, 1)
+                error('The number of rows of "Dzd_wd" does not match the amount of discrete-time performance channels');
+            end
+
+            if nzd ~= size(OLSDSystem.Dzd_u, 1)
+                error('The number of rows of "Dzd_u" does not match the amount of discrete-time performance channels');
+            end
+
+            % Check controller output
+            if nu ~= size(OLSDSystem.Dzd_u, 2)
+                error('The number of columns of "Dzd_u" does not match the controller output dimension');
+            end
+
+            if nu ~= size(OLSDSystem.Dy_u, 2)
+                error('The number of columns of "Dy_u" does not match the controller output dimension');
+            end
+
+            % Check controller input
+            if ny ~= size(OLSDSystem.Dy_wd, 1)
+                error('The number of rows of "Dy_wd" does not match the controller input dimension');
+            end
+
+            if ny ~= size(OLSDSystem.Dy_u, 1)
+                error('The number of rows of "Dy_u" does not match the controller input dimension');
+            end
+        end
         %% Operator overloading
         % Override the uplus operator for OpenLoopSampledDataSystem class object
         function SDSystem = uplus(objSD)
