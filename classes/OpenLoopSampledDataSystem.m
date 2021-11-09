@@ -435,6 +435,130 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         end
         
         %% Sampled-data specific methods
+        % Add weighting filters to the disturbance and performance channels
+        function objSD = appendWeightingFilters(OLSDSystem, Wwc, Wwd, Wzc, Wzd)
+            arguments
+                OLSDSystem  (1,1) OpenLoopSampledDataSystem
+                Wwc         {mustBeNumericOrListedType(Wwc, "ss", "tf")} = 1
+                Wwd         {mustBeNumericOrListedType(Wwd, "ss", "tf")} = 1
+                Wzc         {mustBeNumericOrListedType(Wzc, "ss", "tf")} = 1
+                Wzd         {mustBeNumericOrListedType(Wzd, "ss", "tf")} = 1
+            end
+
+            % Check if filters are continuous- or discrete-time filters
+            if isnumeric(Wwc)
+                Wwc = ss(Wwc);
+            else
+                Wwc = minreal(ss(Wwc), [], false);
+                if Wwc.Ts ~= 0
+                    error('The weighting filter "Wwc" for the continuous-time disturbance channels should be a continuous-time filter.');
+                end
+            end
+
+            if isnumeric(Wwd)
+                Wwd = c2d(ss(Wwd), 1);
+            else
+                Wwd = minreal(ss(Wwd), [], false);
+                if Wwd.Ts == 0
+                    error('The weighting filter "Wwd" for the discrete-time disturbance channels should be a discrete-time filter.');
+                end
+            end
+
+            if isnumeric(Wzc)
+                Wzc = ss(Wzc);
+            else
+                Wzc = minreal(ss(Wzc), [], false);
+                if Wzc.Ts ~= 0
+                    error('The weighting filter "Wzc" for the continuous-time performance channels should be a continuous-time filter.');
+                end
+            end
+
+            if isnumeric(Wzd)
+                Wzd = c2d(ss(Wzd), 1);
+            else
+                Wzd = minreal(ss(Wzd), [], false);
+                if Wzd.Ts == 0
+                    error('The weighting filter "Wzd" for the discrete-time disturbance channels should be a discrete-time filter.');
+                end
+            end
+
+            % Check dimensions
+            dimCheck(OLSDSystem);
+            nwc = OLSDSystem.nwc;
+            nwd = OLSDSystem.nwd;
+            nzc = OLSDSystem.nzc;
+            nzd = OLSDSystem.nzd;
+            nu  = OLSDSystem.nu;
+            ny  = OLSDSystem.ny;
+
+            if nwc ~= size(Wwc, 1)
+                error('The number of outputs of the filter "Wwc" should be equal to nwc');
+            elseif nwc ~= size(Wwc, 2)
+                error('The number of inputs of the filter "Wwc" should be equal to nwc');
+            end
+
+            if nwd ~= size(Wwd, 1)
+                error('The number of outputs of the filter "Wwd" should be equal to nwd');
+            elseif nwd ~= size(Wwd, 2)
+                error('The number of inputs of the filter "Wwd" should be equal to nwd');
+            end
+
+            if nzc ~= size(Wzc, 1)
+                error('The number of outputs of the filter "Wzc" should be equal to nzc');
+            elseif nzc ~= size(Wzc, 2)
+                error('The number of inputs of the filter "Wzc" should be equal to nzc');
+            end
+
+            if nzd ~= size(Wzd, 1)
+                error('The number of outputs of the filter "Wzd" should be equal to nzd');
+            elseif nzd ~= size(Wzd, 2)
+                error('The number of inputs of the filter "Wzd" should be equal to nzd');
+            end
+
+            % State dimensions
+            nx_sd = OLSDSystem.nx;
+            nx_wc = size(Wwc.A, 1);
+            nx_zc = size(Wzc.A, 1);
+            nx_wd = size(Wwd.A, 1);
+            nx_zd = size(Wzd.A, 1);
+
+            % Define state-space matrices of the weighed system
+            % Flow matrices
+            Ac  = [OLSDSystem.Ac, OLSDSystem.Bwc*Wwc.C, zeros(nx_sd, nx_wd+nx_zc+nx_zd);...
+                   zeros(nx_wc, nx_sd), Wwc.A, zeros(nx_wc, nx_wd+nx_zc+nx_zd);...
+                   zeros(nx_wd, nx_sd+nx_wc+nx_zc+nx_wd+nx_zd);...
+                   Wzc.B*OLSDSystem.Czc, Wzc.B*OLSDSystem.Dzc_wc*Wwc.C, zeros(nx_zc, nx_wd), Wzc.A, zeros(nx_zc, nx_zd);...
+                   zeros(nx_zd, nx_sd+nx_wc+nx_zc+nx_wd+nx_zd)];
+            Bwc = [OLSDSystem.Bwc*Wwc.D; Wwc.B; zeros(nx_wd, nwc); Wzc.B*OLSDSystem.Dzc_wc*Wwc.D; zeros(nx_zd, nwc)];
+            Buc = [OLSDSystem.Buc; zeros(nx_wc + nx_wd, nu); Wzc.B*OLSDSystem.Dzc_uc; zeros(nx_zd, nu)];
+
+            % Jump matrices
+            Ad  = [OLSDSystem.Ad, zeros(nx_sd, nx_wc), OLSDSystem.Bwd*Wwd.C, zeros(nx_sd, nx_zc+nx_zd);...
+                   zeros(nx_wc, nx_sd), eye(nx_wc), zeros(nx_wc, nx_wd+nx_zc+nx_zd);...
+                   zeros(nx_wd, nx_sd+nx_wc), Wwd.A, zeros(nx_wd, nx_zc+nx_zd);...
+                   zeros(nx_zc, nx_sd+nx_wc+nx_wd), eye(nx_zc), zeros(nx_zc, nx_zd);...
+                   Wzd.B*OLSDSystem.Czd, zeros(nx_zd, nx_wc), Wzd.B*OLSDSystem.Dzd_wd*Wwd.C, zeros(nx_zd, nx_zc), Wzd.A];
+            Bwd = [OLSDSystem.Bwd*Wwd.D; zeros(nx_wc, nwd); Wwd.B; zeros(nx_zc, nwd); Wzd.B*OLSDSystem.Dzd_wd*Wwd.D];
+            Bud = [OLSDSystem.Bud; zeros(nx_wc+nx_wd+nx_zc, nu); Wzd.B*OLSDSystem.Dzd_ud];
+
+            % Continuous-time performance channel matrices
+            Czc = [Wzc.D*OLSDSystem.Czc, Wzc.D*OLSDSystem.Dzc_wc*Wwc.C, zeros(nzc, nx_wd), Wzc.C, zeros(nzc, nx_zd)];
+            Dzc_wc = Wzc.D*OLSDSystem.Dzc_wc*Wwc.D;
+            Dzc_uc = Wzc.D*OLSDSystem.Dzc_uc;
+
+            % Discrete-time performance channel matrices
+            Czd = [Wzd.D*OLSDSystem.Czd, zeros(nzd, nx_wc), Wzd.D*OLSDSystem.Dzd_wd*Wwd.C, zeros(nzd, nx_zc), Wzd.C];
+            Dzd_wd = Wzd.D*OLSDSystem.Dzd_wd*Wwd.D;
+            Dzd_ud = Wzd.D*OLSDSystem.Dzd_ud;
+
+            % Controller input matrices
+            Cy = [OLSDSystem.Cy, zeros(ny, nx_wc), OLSDSystem.Dy_wd*Wwd.C, zeros(nzd, nx_zc+nx_zd)];
+            Dy_wd = OLSDSystem.Dy_wd*Wwd.D;
+            Dy_ud = OLSDSystem.Dy_ud;
+
+            objSD = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_ud, Cy, Dy_wd, Dy_ud);
+        end
+
         % Calculate closed-loop jump-flow system based on the
         % interconnection
         function objJF = lft(OLSDSystem1, OLSDSystem2)
