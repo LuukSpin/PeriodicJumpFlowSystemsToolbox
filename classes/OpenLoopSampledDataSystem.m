@@ -22,7 +22,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         %Controller input matrices
         Cy      double {mustBeFinite(Cy)}
         Dy_wd   double {mustBeFinite(Dy_wd)}
-        Dy_ud    double {mustBeFinite(Dy_ud)}
+        Dy_ud   double {mustBeFinite(Dy_ud)}
     end
 
     properties (Dependent = true, SetAccess = private, GetAccess = 'public')
@@ -456,7 +456,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             end
 
             if isnumeric(Wwd)
-                Wwd = c2d(ss(Wwd), 1);
+                Wwd = ss(Wwd);
             else
                 Wwd = minreal(ss(Wwd), [], false);
                 if Wwd.Ts == 0
@@ -474,7 +474,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             end
 
             if isnumeric(Wzd)
-                Wzd = c2d(ss(Wzd), 1);
+                Wzd = c2d(ss(Wzd));
             else
                 Wzd = minreal(ss(Wzd), [], false);
                 if Wzd.Ts == 0
@@ -552,7 +552,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             Dzd_ud = Wzd.D*OLSDSystem.Dzd_ud;
 
             % Controller input matrices
-            Cy = [OLSDSystem.Cy, zeros(ny, nx_wc), OLSDSystem.Dy_wd*Wwd.C, zeros(nzd, nx_zc+nx_zd)];
+            Cy = [OLSDSystem.Cy, zeros(ny, nx_wc), OLSDSystem.Dy_wd*Wwd.C, zeros(ny, nx_zc+nx_zd)];
             Dy_wd = OLSDSystem.Dy_wd*Wwd.D;
             Dy_ud = OLSDSystem.Dy_ud;
 
@@ -575,11 +575,11 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             end
 
             % If the second input is a controller than convert it to a
-            % OLJFSystem
+            % OLSDSystem
             if ~isa(OLSDSystem2, 'OpenLoopSampledDataSystem')
                 OLSDSystem2 = ss(OLSDSystem2);
                 h = OLSDSystem2.Ts;
-                OLSDSystem2 = makeJFFromDiscreteController(OLSDSystem2);
+                OLSDSystem2 = makeSDFromDiscreteController(OLSDSystem2);
             end
 
             % Make sure that the interconnection has a compatible
@@ -593,8 +593,8 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
                 error('The interconnection is not possible because the dimensions of the connection does not match');
             end
 
-            Dyu1 = OLSDSystem1.Dy_u;
-            Dyu2 = OLSDSystem2.Dy_u;
+            Dyu1 = OLSDSystem1.Dy_ud;
+            Dyu2 = OLSDSystem2.Dy_ud;
 
             % Interconnection must be wellposed, can be checked by
             % feed-through terms
@@ -624,8 +624,8 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             Dyd2 = OLSDSystem2.Dy_wd;
             Cd1 = OLSDSystem1.Czd;
             Cd2 = OLSDSystem2.Czd;
-            Ddu1 = OLSDSystem1.Dzd_uc;
-            Ddu2 = OLSDSystem2.Dzd_u;
+            Ddu1 = OLSDSystem1.Dzd_ud;
+            Ddu2 = OLSDSystem2.Dzd_ud;
             Ddd1 = OLSDSystem1.Dzd_wd;
             Ddd2 = OLSDSystem2.Dzd_wd;
 
@@ -646,9 +646,59 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
 
         end
 
+        % Determine the state-space model of the sampled-data system when a
+        % reconstructor is applied to the controller output
+        function objSD_reconstructed = applyReconstructor(objSD, opts)
+            arguments
+                objSD   (1,1) OpenLoopSampledDataSystem
+                opts    (1,1) SDopts
+            end
+
+            % Dimensions
+            nx = objSD.nx;
+            nwc = objSD.nwc;
+            nwd = objSD.nwd;
+            nzc = objSD.nzc;
+            nzd = objSD.nzd;
+            nu = objSD.nu;
+            ny = objSD.ny;
+
+            if strcmpi(opts.reconstructor, 'zoh')
+                % Determine new state-space matrices based on reconstructor
+                Ac = [objSD.Ac, objSD.Buc; zeros(nu, nx+nu)];
+                Bwc = [objSD.Bwc; zeros(nu, nwc)];
+                Buc = zeros(nx+nu, nu);
+
+                % Jump matrices
+                Ad = blkdiag(objSD.Ad, zeros(nu));
+                Bwd = [objSD.Bwd; zeros(nu, nwd)];
+                Bud = [objSD.Bud; eye(nu)];
+
+                % Continuous-time performance channels matrices
+                Czc = [objSD.Czc, objSD.Dzc_uc];
+                Dzc_wc = objSD.Dzc_wc;
+                Dzc_uc = zeros(nzc, nu);
+
+                % Discrete-time performance channels matrices
+                Czd = [objSD.Czd, zeros(nzd, nu)];
+                Dzd_wd = objSD.Dzd_wd;
+                Dzd_ud = objSD.Dzd_ud;
+
+                % Controller input matrices
+                Cy = [objSD.Cy, zeros(ny, nu)];
+                Dy_wd = objSD.Dy_wd;
+                Dy_ud = objSD.Dy_ud;
+
+                objSD_reconstructed = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_ud, Cy, Dy_wd, Dy_ud);
+
+            else
+                error('Only the reconstructor "ZOH" is defined at this moment in time.');
+            end
+        end
+
         % Determine closed-loop flow matrices based an open-loop sampled-data
         % system
-        function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLSDSystem, nc)
+        function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLSDSystem)
             %CLOSEDLOOPFLOWMATRICES calculates closed-loop continuous-time flow matrices (Ac, Bwc,
             %Czc, Dzc_wc) from an open-loop sampled-data system.
             %
@@ -675,18 +725,17 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
 
             arguments
                 OLSDSystem      (1,1) OpenLoopSampledDataSystem
-                nc              (1,1) double = OLSDSystem.nx
             end
 
-            %dimensions
+            % Dimensions
             nwc = OLSDSystem.nwc;
             nzc = OLSDSystem.nzc;
+            nc  = OLSDSystem.nx;
 
             Ac = blkdiag(OLSDSystem.Ac, zeros(nc));
             Bwc = [OLSDSystem.Bwc; zeros(nc, nwc)];
             Czc = [OLSDSystem.Czc, zeros(nzc, nc)];
             Dzc_wc = OLSDSystem.Dzc_wc;
-
         end
 
         % Perform synthesis for various system gains and norms
@@ -705,10 +754,12 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             %                 error('This system is not a generalized plant and hence cannot be stabilized');
             %             end
 
+            OLSDSystem = OLSDSystem.applyReconstructor(opts);
+
             % Check all specified system norms such as Hinf, H2, H2g, L1
             switch performanceIndicator
                 case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
-                    [Controller, synthesisNormValue, CLJFSystem] = JFHinfsyn(OLSDSystem, h, opts);
+                    [Controller, synthesisNormValue, CLJFSystem] = SDHinfsyn(OLSDSystem, h, opts);
                 case {'H2', 'h2'}
                     warning('The H2 norm has yet to be implemented in the sampled-data toolbox');
                     Controller = 0;

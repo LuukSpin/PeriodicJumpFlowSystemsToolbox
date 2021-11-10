@@ -26,7 +26,7 @@ Ad = objFJ.Ad;
 Bd = objFJ.Bwd;
 
 x0 = zeros(size(Ac, 1)+1, 1);
-[t, ~, x] = HyEQsolver(@(x,t) f(x,wc(t), Ac, Bc), @(x,t) g(x,Ad,Bd,wd(t)), @(x) flowset(x,h), @(x) jumpset(x,h), x0, TSPAN, JSPAN, obj.simulation.rule, obj.simulation.options);
+[t, ~, x] = HyEQsolver(@(x,t) f(x,wc(t), Ac, Bc), @(x,t) g(x,Ad,Bd,wd(t)), @(x) flowset(x,h), @(x) jumpset(x,h), x0, TSPAN, JSPAN, opts.simulation.rule, opts.simulation.options);
 ind = find(abs(x(:, end) - h) < 1e-9);
 xi = x(:, 1:end-1);
 k = t(ind);

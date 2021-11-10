@@ -1,4 +1,4 @@
-function OLJFSystem = makeJFFromDiscreteController(discreteController)
+function OLSDSystem = makeSDFromDiscreteController(discreteController)
 %UNTITLED6 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -31,7 +31,7 @@ nzd = 0;
 % Flow matrices
 Ac = zeros(nx);
 Bwc = zeros(nx, nwc);
-Buc = zeors(nx nu);
+Buc = zeros(nx, nu);
 
 % Jump matrices
 Ad = Acontroller;
@@ -53,6 +53,6 @@ Cy = Ccontroller;
 Dy_wd = zeros(ny, nwd);
 Dy_u = Dcontroller;
 
-OLJFSystem = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
+OLSDSystem = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
 
 end

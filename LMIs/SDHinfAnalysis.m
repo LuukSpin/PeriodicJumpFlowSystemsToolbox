@@ -1,6 +1,10 @@
-function gamma = JFHinfAnalysis(objCLJF, h)
+function gamma = SDHinfAnalysis(objCLJF, h)
+arguments
+    objCLJF (1,1) JumpFlowSystem
+    h       (1,1) double
+end
 % Dimensions;
-nx = size(objCLJF.Ac, 1);
+nx = objCLJF.nx;
 
 % LMI variables
 Ph = sdpvar(nx, nx, 'symmetric');
@@ -16,7 +20,7 @@ last = 0;
 initialfeas = 0;
 
 % Stability check
-stabCheck = isstable(objCLJF, h);
+stabCheck = objCLJF.isstable(h);
 
 
 % Run the bisection based search until gamma is within the specified
@@ -35,13 +39,14 @@ if stabCheck
             
             % Add a constraint
             constraint = Ph >= 1e-9*eye(size(Ph));
-            constraint2 = [Ph, Ph*B_hat; B_hat'*Ph, eye(size(B_hat, 2))];
-            constraint2 = constraint2 >= 1e-9*eye(size(constraint2));
+%             constraint2 = [Ph, Ph*B_hat; B_hat'*Ph, eye(size(B_hat, 2))];
+%             constraint2 = constraint2 >= 1e-9*eye(size(constraint2));
             
             opts = LS.opts;
             %     diagnostics = optimize(HinfLMI+constraint, [], opts.LMI)
             rng(1);
-            diagnostics = optimize(HinfAnalysisLMI+constraint+constraint2, [], opts.LMI);
+%             diagnostics = optimize(HinfAnalysisLMI+constraint+constraint2, [], opts.LMI);
+            diagnostics = optimize(HinfAnalysisLMI+constraint, [], opts.LMI);
             
             if (value(HinfAnalysisLMI) && value(constraint))
                 a(2) = mean(a);
@@ -66,7 +71,7 @@ end
 
 % Determine if bisection-based search was succesful
 if initialfeas
-    if isstable(objCLJF, h)
+    if JFStability(objCLJF, h)
         gamma = a(2);
     else
         gamma = nan;

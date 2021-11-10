@@ -1,4 +1,4 @@
-function [HinfLMIMatrix, A_bar, Ad, Bud, Cy] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamma)
+function [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamma)
 
 %Calculate closed-loop flow matrices from the open-loop Jump/Flow system
 [Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopSDSystem.ClosedLoopFlowMatrices();
@@ -24,30 +24,30 @@ Cy = OpenLoopSDSystem.Cy;
 Bwd = OpenLoopSDSystem.Bwd;
 Dy_wd = OpenLoopSDSystem.Dy_wd;
 Czd = OpenLoopSDSystem.Czd;
-Dzd_u = OpenLoopSDSystem.Dzd_u;
+Dzd_ud = OpenLoopSDSystem.Dzd_ud;
 Dzd_wd = OpenLoopSDSystem.Dzd_wd;
 
-% sdp variables
-Y = sdpVariableStruct.Y;
-X = sdpVariableStruct.X;
-Gamma = sdpVariableStruct.Gamma;
-Theta = sdpVariableStruct.Theta;
-Upsilon = sdpVariableStruct.Upsilon;
-Omega = sdpVariableStruct.Omega;
+% % sdp variables
+% Y = sdpVariableStruct.Y;
+% X = sdpVariableStruct.X;
+% Gamma = sdpVariableStruct.Gamma;
+% Theta = sdpVariableStruct.Theta;
+% Upsilon = sdpVariableStruct.Upsilon;
+% Omega = sdpVariableStruct.Omega;
 
 %Dimensions
-nc = size(X, 1);
+nc = size(sdpVariableStruct.X, 1);
 nwd = size(Dzd_wd, 2);
 nzd = size(Dzd_wd, 1);
 
 h_tmp = 1;
 %Diagonal entries
-entry11 = Y;
-entry22 = X;
+entry11 = sdpVariableStruct.Y;
+entry22 = sdpVariableStruct.X;
 entry33 = gamma^2*eye(nwd)*h_tmp;
 entry44 = eye(rb);
-entry55 = Y;
-entry66 = X;
+entry55 = sdpVariableStruct.Y;
+entry66 = sdpVariableStruct.X;
 entry77 = eye(rc);
 entry88 = eye(nzd)/h_tmp;
 
@@ -58,24 +58,24 @@ entry32 = zeros(nwd, nc);
 entry41 = zeros(rb, nc);
 entry42 = zeros(rb, nc);
 entry43 = zeros(rb, nwd);
-entry51 = Y*A_bar*Ad+Theta*Cy;
-entry52 = Gamma;
-entry53 = Y*A_bar*Bwd+Theta*Dy_wd;
-entry54 = Y*B_bar;
-entry61 = A_bar*(Ad+Bud*Omega*Cy);
-entry62 = A_bar*(Ad*X+Bud*Upsilon);
-entry63 = A_bar*(Bwd+Bud*Omega*Dy_wd);
+entry51 = sdpVariableStruct.Y*A_bar*Ad+sdpVariableStruct.Theta*Cy;
+entry52 = sdpVariableStruct.Gamma;
+entry53 = sdpVariableStruct.Y*A_bar*Bwd+sdpVariableStruct.Theta*Dy_wd;
+entry54 = sdpVariableStruct.Y*B_bar;
+entry61 = A_bar*(Ad+Bud*sdpVariableStruct.Omega*Cy);
+entry62 = A_bar*(Ad*sdpVariableStruct.X+Bud*sdpVariableStruct.Upsilon);
+entry63 = A_bar*(Bwd+Bud*sdpVariableStruct.Omega*Dy_wd);
 entry64 = B_bar;
 entry65 = eye(nc);
-entry71 = C_bar*(Ad+Bud*Omega*Cy);
-entry72 = C_bar*(Ad*X+Bud*Upsilon);
-entry73 = C_bar*(Bwd+Bud*Omega*Dy_wd);
+entry71 = C_bar*(Ad+Bud*sdpVariableStruct.Omega*Cy);
+entry72 = C_bar*(Ad*sdpVariableStruct.X+Bud*sdpVariableStruct.Upsilon);
+entry73 = C_bar*(Bwd+Bud*sdpVariableStruct.Omega*Dy_wd);
 entry74 = zeros(rc, rb);
 entry75 = zeros(rc, nc);
 entry76 = zeros(rc, nc);
-entry81 = Czd+Dzd_u*Omega*Cy;
-entry82 = Czd*X+Dzd_u*Upsilon;
-entry83 = Dzd_wd+Dzd_u*Omega*Dy_wd;
+entry81 = Czd+Dzd_ud*sdpVariableStruct.Omega*Cy;
+entry82 = Czd*sdpVariableStruct.X+Dzd_ud*sdpVariableStruct.Upsilon;
+entry83 = Dzd_wd+Dzd_ud*sdpVariableStruct.Omega*Dy_wd;
 entry84 = zeros(nzd, rb);
 entry85 = zeros(nzd, nc);
 entry86 = zeros(nzd, nc);

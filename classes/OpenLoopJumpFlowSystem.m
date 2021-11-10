@@ -333,6 +333,44 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
                 error('The number of rows of "Dyd_ud" does not match the discrete-time controller input dimension');
             end
         end
+
+        %% OpenLoopJumpFlowSystem specific methods
+        % Add weighting filters to the disturbance and performance channels
+        function objJF = appendWeightingFilters(OLJFSystem, Wwc, Wwd, Wzc, Wzd)
+            arguments
+                OLJFSystem  (1,1) OpenLoopJumpFlowSystem
+                Wwc         {mustBeNumericOrListedType(Wwc, "ss", "tf")} = 1
+                Wwd         {mustBeNumericOrListedType(Wwd, "ss", "tf")} = 1
+                Wzc         {mustBeNumericOrListedType(Wzc, "ss", "tf")} = 1
+                Wzd         {mustBeNumericOrListedType(Wzd, "ss", "tf")} = 1
+            end
+
+            dimCheck(OLJFSystem);
+            objSD = OpenLoopSampledDataSystem(OLJFSystem.Ac, OLJFSystem.Bwc, OLJFSystem.Buc, OLJFSystem.Ad, OLJFSystem.Bwd, OLJFSystem.Bud, OLJFSystem.Czc, OLJFSystem.Dzc_wc, ...
+                                              OLJFSystem.Dzc_uc, OLJFSystem.Czd, OLJFSystem.Dzd_wd, OLJFSystem.Dzd_ud, OLJFSystem.Cyd, OLJFSystem.Dyd_wd, OLJFSystem.Dyd_ud);
+            objSD = objSD.appendWeightingFilters(Wwc, Wwd, Wzc, Wzd);
+
+            % Convert weighting filters which are possibly numeric or tf to
+            % ss
+            Wwc = minreal(Wwc, [], false);
+            Wwd = minreal(Wwd, [], false);
+            Wzc = minreal(Wzc, [], false);
+            Wzd = minreal(Wzd, [], false);
+
+            % State dimensions
+            nx_wd = size(Wwd.A, 1);
+            nx_zc = size(Wzc.A, 1);
+            nx_zd = size(Wzd.A, 1);
+
+            % Continuous-time controller input matrices
+            Cyc = [OLJFSystem.Cyc, OLJFSystem.Dyc_wc*Wwc.C, zeros(OLJFSystem.nyc, nx_wd+nx_zc+nx_zd)];
+            Dyc_wc = OLJFSystem.Dyc_wc*Wwc.D;
+            Dyc_uc = OLJFSystem.Dyc_uc;
+
+            % Construct OLJF object
+            objJF = OpenLoopJumpFlowSystem(objSD.Ac, objSD.Bwc, objSD.Buc, objSD.Ad, objSD.Bwd, objSD.Bud, objSD.Czc, objSD.Dzc_wc, objSD.Dzc_uc, objSD.Czd, objSD.Dzd_wd, objSD.Dzd_ud, ...
+                                           Cyc, Dyc_wc, Dyc_uc, objSD.Cy, objSD.Dy_wd, objSD.Dy_ud);
+        end
     end
     methods (Access = protected)
         function propgrp = getPropertyGroups(~)

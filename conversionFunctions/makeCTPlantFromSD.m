@@ -39,15 +39,15 @@ C = [Cc; Cd; Cy];
 
 Dcc = OpenLoopSDSystem.Dzc_wc;
 Dcd = zeros(nzc, nwd); %This is zero because the continuous-time performance channels are not influenced by the discrete-time disturbance channels
-Dcu = OpenLoopSDSystem.Dzc_u;
+Dcu = OpenLoopSDSystem.Dzc_uc;
 
 Ddc = zeros(nzd, nwc); %This is zero because the discrete-time performance channels are not influenced by the continuous-time disturbance channels
 Ddd = OpenLoopSDSystem.Dzd_wd;
-Ddu = OpenLoopSDSystem.Dzd_u;
+Ddu = OpenLoopSDSystem.Dzd_ud;
 
 Dyc = zeros(ny, nwc); %This is zero because the controller input is not influenced by the continuous-time disturbance channels.
 Dyd = OpenLoopSDSystem.Dy_wd;
-Dyu = OpenLoopSDSystem.Dy_u;
+Dyu = OpenLoopSDSystem.Dy_ud;
 
 D = [Dcc, Dcd, Dcu; Ddc, Ddd, Ddu; Dyc, Dyd, Dyu];
 

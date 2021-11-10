@@ -18,36 +18,28 @@ wellConditioned = false;
 maxIt = ceil(log(2)/log(backoff));
 counter = 0;
 
-% sdp variables
-Y = sdpVariableStruct.Y;
-X = sdpVariableStruct.X;
-Gamma = sdpVariableStruct.Gamma;
-Theta = sdpVariableStruct.Theta;
-Upsilon = sdpVariableStruct.Upsilon;
-Omega = sdpVariableStruct.Omega;
-
 while ~wellConditioned && (counter < maxIt)
     
     % Dimensions;
     nu = size(OpenLoopSDSystem.Bud, 2);
     ny = size(OpenLoopSDSystem.Cy, 1);
-    nx = size(Y, 1);
-    nc = size(X, 1);
+    nx = size(sdpVariableStruct.Y, 1);
+    nc = size(sdpVariableStruct.X, 1);
     opts = LS.opts;
     
     LMI = [];
     
     gamValue = gamma*backoff;
-    [HinfLMI, A_bar, Q_bar, Z_bar, W_bar] = fillHinfLMI(OpenLoopSDSystem, X, Y, h, gamValue, Gamma, Theta, Upsilon, Omega);
+    [HinfLMI, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamValue);
     LMI = [LMI; (HinfLMI+HinfLMI')/2 >= numAcc*eye(size(HinfLMI))];
-    posDefConstraint = [Y, eye(nx, nc); eye(nc, nx), X];
+    posDefConstraint = [sdpVariableStruct.Y, eye(nx, nc); eye(nc, nx), sdpVariableStruct.X];
     LMI = [LMI; posDefConstraint >= numAcc*eye(size(posDefConstraint))];
     
     % Add numerical aspect contraints
     alpha = sdpvar(1,1);
-    NumericalConstraint1 = (X - alpha*eye(size(X)) <= -numAcc*eye(size(X)));
-    NumericalConstraint2 = (Y - alpha*eye(size(Y)) <= -numAcc*eye(size(X)));
-    ParamBlock = [Gamma, Theta; Upsilon, Omega];
+    NumericalConstraint1 = (sdpVariableStruct.X - alpha*eye(size(sdpVariableStruct.X)) <= -numAcc*eye(size(sdpVariableStruct.X)));
+    NumericalConstraint2 = (sdpVariableStruct.Y - alpha*eye(size(sdpVariableStruct.Y)) <= -numAcc*eye(size(sdpVariableStruct.X)));
+    ParamBlock = [sdpVariableStruct.Gamma, sdpVariableStruct.Theta; sdpVariableStruct.Upsilon, sdpVariableStruct.Omega];
     alphaBlock = alpha*eye(size(ParamBlock));
     NumericalConstraint3 = [alphaBlock, ParamBlock; ParamBlock', alphaBlock] >= numAcc*eye(size(blkdiag(alphaBlock, alphaBlock)));
     
@@ -62,7 +54,7 @@ while ~wellConditioned && (counter < maxIt)
     diagnostics = optimize(LMI, [], opts.LMI);
     
     beta = sdpvar(1,1); assign(beta, 1);
-    newPosDefConstraint = [Y, eye(nx, nc)*beta; eye(nc, nx)*beta, X];
+    newPosDefConstraint = [sdpVariableStruct.Y, eye(nx, nc)*beta; eye(nc, nx)*beta, sdpVariableStruct.X];
     
     LMI = [LMI; newPosDefConstraint >= numAcc*eye(size(newPosDefConstraint)); beta >= 1];
     diagnostics = optimize(LMI, -beta, opts.LMI);
@@ -70,21 +62,8 @@ while ~wellConditioned && (counter < maxIt)
     
     LMI = replace(LMI, beta, betaValue);
     diagnostics = optimize(LMI, [], opts.LMI);
-    
-    % Give values to the LMI variables in order to calculate the controller
-    Y_value = value(Y);
-    X_value = value(X);
-    Gamma_value = value(Gamma);
-    Theta_value = value(Theta);
-    Upsilon_value = value(Upsilon);
-    Omega_value = value(Omega);
-    
-    U = X_value;
-    V = inv(X_value)-Y_value;
-    
-    % Calculate controller
-    controllerMat = [V, Y_value*A_bar*Q_bar; zeros(nu, size(V, 2)), eye(nu)]\[Gamma_value-Y_value*A_bar*Z_bar*X_value, Theta_value; Upsilon_value, Omega_value]/[U', zeros(size(Y_value, 1), ny); W_bar*X_value, eye(ny)];
-    Controller = minreal(ss(controllerMat(1:nc, 1:nc), controllerMat(1:nc, nc+1:end), controllerMat(nc+1:end, 1:nc), controllerMat(nc+1:end, nc+1:end), h), [], false);
+
+    Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariableStruct, h);
     
     K_zpk = zpk(Controller);
     K_zeros = K_zpk.z{:};

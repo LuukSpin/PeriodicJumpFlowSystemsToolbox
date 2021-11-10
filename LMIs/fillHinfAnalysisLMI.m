@@ -16,9 +16,9 @@ Dd = objCLJF.Dzd_wd;
 [A_hat, B_hat, C_hat] = HamiltonianJF(Ac, Bc, Cc, Dc, gamma, h);
 
 %Dimensions
-nx = size(objCLJF.Ac,1);
-nwd = size(objCLJF.Dzd_wd, 2);
-nzd = size(objCLJF.Dzd_wd, 1);
+nx = objCLJF.nx;
+nwd = objCLJF.nwd;
+nzd = objCLJF.nzd;
 nb = size(B_hat, 2);
 nc = size(C_hat, 1);
 
