@@ -374,7 +374,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
     end
     methods (Access = protected)
         function propgrp = getPropertyGroups(~)
-            proplist = {'Loop', 'Ac', 'Bwc', 'Buc', 'Ad', 'Bwd', 'Bud', 'Czc', 'Dzc_wc', 'Dzc_uc', 'Czd', 'Dzd_wd', 'Dzd_ud', 'Cyc','Dyc_wc', 'Dyc_uc', 'Cyd','Dyd_wd', 'Dyd_ud'};
+            proplist = {'Ac', 'Bwc', 'Buc', 'Ad', 'Bwd', 'Bud', 'Czc', 'Dzc_wc', 'Dzc_uc', 'Czd', 'Dzd_wd', 'Dzd_ud', 'Cyc','Dyc_wc', 'Dyc_uc', 'Cyd','Dyd_wd', 'Dyd_ud'};
             propgrp = matlab.mixin.util.PropertyGroup(proplist);
         end
     end

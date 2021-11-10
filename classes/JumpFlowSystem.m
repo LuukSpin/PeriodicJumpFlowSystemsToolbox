@@ -376,7 +376,9 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
 
             % Check stability
             if ~CLJFSystem.isstable(h)
-                error('The system is not stable and hence does not have a finite norm of any kind.');
+                warning('The system is not stable and hence does not have a finite norm of any kind.');
+                normValue = nan;
+                return
             end
 
             % Check all specified system norms such as Hinf, H2, H2g, L1
@@ -400,7 +402,7 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
 
     methods (Access = protected)
         function propgrp = getPropertyGroups(~)
-            proplist = {'Loop', 'Ac', 'Bwc', 'Ad', 'Bwd', 'Czc', 'Dzc_wc', 'Czd', 'Dzd_wd'};
+            proplist = {'Ac', 'Bwc', 'Ad', 'Bwd', 'Czc', 'Dzc_wc', 'Czd', 'Dzd_wd'};
             propgrp = matlab.mixin.util.PropertyGroup(proplist);
         end
     end

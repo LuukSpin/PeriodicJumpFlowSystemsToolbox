@@ -1,24 +1,24 @@
-function OLSDSystem = makeSDFromDiscreteController(discreteController, opts)
+function OLSDSystem = makeSDFromContinuousController(continuousController, opts)
 %UNTITLED6 Summary of this function goes here
 %   Detailed explanation goes here
 
 arguments
-    discreteController  {mustBeA(discreteController, ["ss", "tf"])}
+    continuousController  {mustBeA(continuousController, ["ss", "tf"])}
     opts                (1,1) SDopts = SDopts()
 end
 
-discreteController = minreal(ss(discreteController), [], false);
+continuousController = minreal(ss(continuousController), [], false);
 
-% Check if the controller is discrete-time controller
-if discreteController.Ts == 0
-    error('The controller has to be discrete-time controller');
+% Check if the controller is continuous-time controller
+if continuousController.Ts ~= 0
+    error('The controller has to be continuous-time controller');
 end
 
 % Controller matrices
-Acontroller = discreteController.A;
-Bcontroller = discreteController.B;
-Ccontroller = discreteController.C;
-Dcontroller = discreteController.D;
+Acontroller = continuousController.A;
+Bcontroller = continuousController.B;
+Ccontroller = continuousController.C;
+Dcontroller = continuousController.D;
 
 % Dimensions
 nx = size(Acontroller, 1);

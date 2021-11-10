@@ -1,7 +1,7 @@
 classdef OpenLoopSampledDataSystem < JumpFlowSystem
     %OpenLoopSampledDataSystem Construct an instance of this class
     %   OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc,
-    %   Dzc_wc, Dzc_u, Czd, Dzd_Wd, Dzd_u, Cy, Cy_wd, Cy_u)
+    %   Dzc_wc, Dzc_uc, Czd, Dzd_Wd, Dzd_ud, Cy, Dy_wd, Dy_ud)
     %   construct an open-loop sampled-data system with the
     %   following state-space realization:
     %  \dot{x} = Ac*x  + Bwc*w_c    + Buc*u
@@ -28,6 +28,10 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
     properties (Dependent = true, SetAccess = private, GetAccess = 'public')
         nu      (1,1) double
         ny      (1,1) double
+    end
+
+    properties (GetAccess = 'public', SetAccess = ?applyReconstructor)
+        reconstructor = 'unspecified'
     end
 
     methods
@@ -561,7 +565,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
 
         % Calculate closed-loop jump-flow system based on the
         % interconnection
-        function objJF = lft(OLSDSystem1, OLSDSystem2)
+        function objJF = lft(OLSDSystem1, OLSDSystem2, opts)
             %LFT is used to interconnect systems
             %   LFT(sys1, sys2) produces a closed-loop jump-flow system.
             %   sys1 has to be an OpenLoopJumpFlowSystem while sys2 may be
@@ -572,14 +576,24 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             arguments
                 OLSDSystem1         (1,1) OpenLoopSampledDataSystem
                 OLSDSystem2         {mustBeNumericOrListedType(OLSDSystem2, "ss", "tf", "OpenLoopSampledDataSystem")}
+                opts                (1,1) SDopts = SDopts()
             end
+
+            if strcmpi(OLSDSystem1.reconstructor, 'unspecified')
+                OLSDSystem1 = applyReconstructor(OLSDSystem1, opts);
+            end
+
 
             % If the second input is a controller than convert it to a
             % OLSDSystem
             if ~isa(OLSDSystem2, 'OpenLoopSampledDataSystem')
                 OLSDSystem2 = ss(OLSDSystem2);
                 h = OLSDSystem2.Ts;
-                OLSDSystem2 = makeSDFromDiscreteController(OLSDSystem2);
+                OLSDSystem2 = makeSDFromDiscreteController(OLSDSystem2, opts);
+            else
+                if strcmpi(OLSDSystem2.reconstructor, 'unspecified')
+                    OLSDSystem2 = applyReconstructor(OLSDSystem2, opts);
+                end
             end
 
             % Make sure that the interconnection has a compatible
@@ -651,7 +665,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         function objSD_reconstructed = applyReconstructor(objSD, opts)
             arguments
                 objSD   (1,1) OpenLoopSampledDataSystem
-                opts    (1,1) SDopts
+                opts    (1,1) SDopts = SDopts()
             end
 
             % Dimensions
@@ -690,6 +704,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
                 Dy_ud = objSD.Dy_ud;
 
                 objSD_reconstructed = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_ud, Cy, Dy_wd, Dy_ud);
+                objSD_reconstructed.reconstructor = opts.reconstructor;
 
             else
                 error('Only the reconstructor "ZOH" is defined at this moment in time.');
@@ -698,7 +713,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
 
         % Determine closed-loop flow matrices based an open-loop sampled-data
         % system
-        function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLSDSystem)
+        function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLSDSystem, nc, opts)
             %CLOSEDLOOPFLOWMATRICES calculates closed-loop continuous-time flow matrices (Ac, Bwc,
             %Czc, Dzc_wc) from an open-loop sampled-data system.
             %
@@ -725,12 +740,18 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
 
             arguments
                 OLSDSystem      (1,1) OpenLoopSampledDataSystem
+                nc              (1,1) double = OLSDSystem.nx
+                opts            (1,1) SDopts = SDopts()
+            end
+
+            if strcmpi(OLSDSystem.reconstructor, 'unspecified')
+                OLSDSystem = applyReconstructor(OLSDSystem, opts);
+                nc = nc+OLSDSystem.nu;
             end
 
             % Dimensions
             nwc = OLSDSystem.nwc;
             nzc = OLSDSystem.nzc;
-            nc  = OLSDSystem.nx;
 
             Ac = blkdiag(OLSDSystem.Ac, zeros(nc));
             Bwc = [OLSDSystem.Bwc; zeros(nc, nwc)];
@@ -754,7 +775,9 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             %                 error('This system is not a generalized plant and hence cannot be stabilized');
             %             end
 
-            OLSDSystem = OLSDSystem.applyReconstructor(opts);
+            if strcmpi(OLSDSystem.reconstructor, 'unspecified')
+                OLSDSystem = OLSDSystem.applyReconstructor(opts);
+            end
 
             % Check all specified system norms such as Hinf, H2, H2g, L1
             switch performanceIndicator
@@ -787,7 +810,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
     end
     methods (Access = protected)
         function propgrp = getPropertyGroups(~)
-            proplist = {'Loop', 'Ac', 'Bwc', 'Buc', 'Ad', 'Bwd', 'Bud', 'Czc', 'Dzc_wc', 'Dzc_uc', 'Czd', 'Dzd_wd', 'Dzd_ud','Cy','Dy_wd', 'Dy_ud'};
+            proplist = {'Ac', 'Bwc', 'Buc', 'Ad', 'Bwd', 'Bud', 'Czc', 'Dzc_wc', 'Dzc_uc', 'Czd', 'Dzd_wd', 'Dzd_ud','Cy','Dy_wd', 'Dy_ud'};
             propgrp = matlab.mixin.util.PropertyGroup(proplist);
         end
     end

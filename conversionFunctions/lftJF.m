@@ -3,7 +3,7 @@ function CLJFSystem = lftJF(OLJFSystem,discreteController)
 %   Detailed explanation goes here
 
 % Check if first input is an open-loop jump/flow system
-if ~isa(OLJFSystem, 'OpenLoopJumpFlowSystem')
+if ~isa(OLJFSystem, 'OpenLoopSampledDataSystem')
     error('The input should be an open-loop jump/flow system');
 end
 
@@ -37,7 +37,7 @@ nu = OLJFSystem.nu;
 ny = OLJFSystem.ny;
 
 % Determine all closed-loop flow matrices
-[Ac, Bwc, Czc, Dzc_wc] = closedLoopFlowMatrices(OLJFSystem, nc);
+[Ac, Bwc, Czc, Dzc_wc] = OLJFSystem.ClosedLoopFlowMatrices(nc);
 
 % Initiate closed-loop jump-flow system
 CLJFSystem = JumpFlowSystem();
@@ -62,7 +62,7 @@ CLJFSystem.Dzc_wc = Dzc_wc;
 
 % Discrete-time performance channel matrices
 CzdAdd = [OLJFSystem.Czd, zeros(n_zd, nc)];
-CzdLeft = [zeros(n_zd, nc), OLJFSystem.Dzd_u];
+CzdLeft = [zeros(n_zd, nc), OLJFSystem.Dzd_ud];
 CzdRight = AdRight;
 CLJFSystem.Czd = CzdAdd+CzdLeft*controllerMat*CzdRight;
 Dzd_wdAdd = OLJFSystem.Dzd_wd;

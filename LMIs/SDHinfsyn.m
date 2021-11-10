@@ -9,6 +9,10 @@ arguments
     opts                (1,1) SDopts = SDopts();
 end
 
+if strcmpi(OpenLoopSDSystem.reconstructor, 'unspecified')
+    OpenLoopSDSystem = OpenLoopSDSystem.applyReconstructor(opts);
+end
+
 numAcc = opts.LMI.numericalAccuracy;
 
 % Dimensions;
@@ -50,11 +54,10 @@ while N < Nmax
         % Add a constraint
         constraint = [sdpVariables.Y, eye(nx, nc); eye(nc, nx), sdpVariables.X] >= numAcc*eye(size(blkdiag(sdpVariables.Y, sdpVariables.X)));
         
-        opts = LS.opts;
         rng(1);
-        diagnostics = optimize(HinfLMI+constraint, [], opts.LMI);
+        diagnostics = optimize(HinfLMI+constraint, [], opts.LMI.solverOptions);
         
-        if (value(HinfLMI) && value(constraint))
+        if diagnostics.problem == 0
             a(2) = mean(a);
             initialfeas = 1;
         else
@@ -93,7 +96,7 @@ nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
 nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
 
 if nrUnstabPole+nrNonMinPhaseZero>0
-    [Controller, gamma] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariables, h, optsSD);
+    [Controller, gamma] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariables, h, opts);
 end
 
 CLJFSystem = OpenLoopSDSystem.lft(Controller);
