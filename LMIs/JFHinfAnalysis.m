@@ -1,13 +1,20 @@
-function gamma = JFHinfAnalysis(objCLJF, h)
+function gamma = JFHinfAnalysis(objCLJF, h, opts)
+arguments
+    objCLJF (1,1) JumpFlowSystem
+    h       (1,1) double
+    opts    (1,1) SDopts = SDopts()
+end
+
 % Dimensions;
-nx = size(objCLJF.Ac, 1);
+nx = objCLJF.nx;
+numAcc = opts.LMI.numericalAccuracy;
 
 % LMI variables
 Ph = sdpvar(nx, nx, 'symmetric');
 
 % Bisection settings
 Nmax = 100; %Maximum numbers of iterations
-tol = 1e-2; %Tolerance to calculate upperbound of Hinf norm
+tol = 1e-4; %Tolerance to calculate upperbound of Hinf norm
 
 % Initialization
 a = [tol 2];
@@ -30,20 +37,18 @@ if stabCheck
             
             % Fill the H-infinity LMI
             [HinfLMIAnalysisMatrix, B_hat] = fillHinfAnalysisLMI(objCLJF, Ph, h, gamma);
-            HinfAnalysisLMI = (HinfLMIAnalysisMatrix+HinfLMIAnalysisMatrix')/2 >= 1e-9*eye(size(HinfLMIAnalysisMatrix));
+            HinfAnalysisLMI = (HinfLMIAnalysisMatrix+HinfLMIAnalysisMatrix')/2 >= numAcc*eye(size(HinfLMIAnalysisMatrix));
             
             
             % Add a constraint
-            constraint = Ph >= 1e-9*eye(size(Ph));
+            constraint = (Ph+Ph')/2 >= numAcc*eye(size(Ph));
             constraint2 = [Ph, Ph*B_hat; B_hat'*Ph, eye(size(B_hat, 2))];
-            constraint2 = constraint2 >= 1e-9*eye(size(constraint2));
+            constraint2 = (constraint2+constraint2')/2 >= numAcc*eye(size(constraint2));
             
-            opts = LS.opts;
-            %     diagnostics = optimize(HinfLMI+constraint, [], opts.LMI)
             rng(1);
-            diagnostics = optimize(HinfAnalysisLMI+constraint+constraint2, [], opts.LMI);
+            diagnostics = optimize(HinfAnalysisLMI+constraint+constraint2, [], opts.LMI.solverOptions);
             
-            if (value(HinfAnalysisLMI) && value(constraint))
+            if diagnostics.problem == 0
                 a(2) = mean(a);
                 initialfeas = 1;
             else

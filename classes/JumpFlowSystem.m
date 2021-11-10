@@ -366,12 +366,13 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
         end
 
         % Perform analysis for various system gains and norms
-        function normValue = analysis(CLJFSystem, performanceIndicator, h)
+        function normValue = analysis(CLJFSystem, performanceIndicator, h, opts)
 
             arguments
                 CLJFSystem              (1,1) JumpFlowSystem
                 performanceIndicator    (1,1) string
                 h                       (1,1) double
+                opts                    (1,1) SDopts = SDopts()
             end
 
             % Check stability
@@ -384,7 +385,7 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
             % Check all specified system norms such as Hinf, H2, H2g, L1
             switch performanceIndicator
                 case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
-                    normValue = JFHinfAnalysis(CLJFSystem, h);
+                    normValue = JFHinfAnalysis(CLJFSystem, h, opts);
                 case {'H2', 'h2'}
                     warning('The H2 norm has yet to be implemented in the sampled-data toolbox');
                     normValue = nan;
