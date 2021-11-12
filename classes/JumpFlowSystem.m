@@ -360,9 +360,53 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
             JFSystem = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
         end
 
+        %% System theoretic properties
         % Stability function
-        function stabilityFlag = isstable(JumpFlowSystem, h)
-            stabilityFlag = all(abs(eig(expm(JumpFlowSystem.Ac*h)*JumpFlowSystem.Ad)) < 1);
+        function stabilityFlag = isstable(objJF, h)
+            stabilityFlag = all(abs(eig(expm(objJF.Ac*h)*objJF.Ad)) < 1);
+        end
+
+        % Reachability function
+        function reachabilityFlag = isreachable(objJF, h, opts)
+            arguments
+                objJF   (1,1) JumpFlowSystem
+                h       (1,1) double
+                opts    (1,1) SDopts = SDopts()
+            end
+
+            Ac = objJF.Ac;
+            Bwc = objJF.Bwc;
+            Ad = objJF.Ad;
+            Bwd = objJF.Bwd;
+
+            nx = objJF.nx;
+
+            monodromyMatrix = expm(Ac*h)*Ad;
+
+            CTLTIctrbMat = ctrb(Ac, Bwc);
+            Bd_bar = [Bwd Ad*CTLTIctrbMat];
+
+            JFreachabilityMatrix = [ctrb(monodromyMatrix, Bd_bar) CTLTIctrbMat];
+            [~, Sing] = svd(JFreachabilityMatrix);
+            Sing = diag(Sing(1:nx, 1:nx));
+            if all(Sing >= opts.LMI.numericalAccuracy)
+                reachabilityFlag = true;
+            else
+                reachabilityFlag = false;
+            end
+
+        end
+
+        % Strong reachability function
+        function strongReachabilityFlag = isstrongreachable(objJF, h, opts)
+        end
+
+        % Controllability function
+        function controllabilityFlag = iscontrollable(objJF, h, opts)
+        end
+       
+        % Stabilizability function
+        function stabilizabilityFlag = isstabilizable(objJF, h, opts)
         end
 
         % Perform analysis for various system gains and norms
