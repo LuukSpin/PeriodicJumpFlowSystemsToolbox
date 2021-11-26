@@ -8,3 +8,9 @@
 2a)	Add checks to make sure that some matrices are positive (semi) definite or negitive (semi) definite
 2b)	Add line search for Hinf=L2-ind and add golden search for L1
 2b)	For H2g used a search to find P(\tau)
+
+Imperische relaties voor filters
+https://books.google.nl/books?id=qykSBQAAQBAJ&printsec=frontcover&hl=nl#v=onepage&q&f=false
+
+Entropy book:
+https://www.jstor.org/stable/24900697?seq=2#metadata_info_tab_contents

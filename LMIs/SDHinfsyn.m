@@ -83,6 +83,7 @@ if initialfeas
 else
     gamma = inf;
     Controller = ss(0);
+    CLJFSystem = JumpFlowSystem();
     return
 end
 
@@ -95,9 +96,9 @@ K_poles = K_zpk.p{:};
 nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
 nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
 
-if nrUnstabPole+nrNonMinPhaseZero>0
-    [Controller, gamma] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariables, h, opts);
-end
+% if nrUnstabPole+nrNonMinPhaseZero>0
+%     [Controller, gamma] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariables, h, opts);
+% end
 
 CLJFSystem = OpenLoopSDSystem.lft(Controller);
 

@@ -282,11 +282,13 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
 
             Ac = objSD.Ac;
             Bwc = objSD.Bwc;
+            Buc = objSD.Buc;
             Ad = objSD.Ad;
             Bwd = objSD.Bwd;
             Bud = objSD.Bud;
             Czc = -objSD.Czc;
             Dzc_wc = -objSD.Dzc_wc;
+            Dzc_uc = -objSD.Dzc_uc;
             Czd = -objSD.Czd;
             Dzd_wd = -objSD.Dzd_wd;
             Dzd_u = -objSD.Dzd_uc;
@@ -294,7 +296,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             Dy_wd = -objSD.Dy_wd;
             Dy_u = -objSD.Dy_u;
 
-            SDSystem = OpenLoopSampledDataSystem(Ac, Bwc, Ad, Bwd, Bud, Czc, Dzc_wc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
+            SDSystem = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
         end
 
         % Override the plus operator for OpenLoopSampledDataSystem class object
@@ -306,11 +308,13 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
 
             Ac = blkdiag(objSD1.Ac, objSD2.Ac);
             Bwc = [objSD1.Bwc; objSD2.Bwc];
+            Buc = [objSD1.Buc; objSD2.Buc];
             Ad = blkdiag(objSD1.Ad, objSD2.Ad);
             Bwd = [objSD1.Bwd; objSD2.Bwd];
             Bud = [objSD1.Bud; objSD2.Bud];
             Czc = [objSD1.Czc, objSD2.Czc];
             Dzc_wc = objSD1.Dzc_wc+objSD2.Dzc_wc;
+            Dzc_uc = objSD1.Dzc_uc+objSD2.Dzc_uc;
             Czd = [objSD1.Czd, objSD2.Czd];
             Dzd_wd = objSD1.Dzd_wd+objSD2.Dzd_wd;
             Dzd_u = objSD1.Dzd_uc+objSD2.Dzd_u;
@@ -318,7 +322,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             Dy_wd = objSD1.Dy_wd+objSD2.Dy_wd;
             Dy_u = objSD1.Dy_u+objSD2.Dy_u;
 
-            SDSystem = OpenLoopSampledDataSystem(Ac, Bwc, Ad, Bwd, Bud, Czc, Dzc_wc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
+            SDSystem = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
         end
 
         % Override the minus operator for OpenLoopSampledDataSystem class object
@@ -369,12 +373,15 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
 
             Ac = [obj2.Ac, zeros(nx1, nx2); obj1.Bwc*obj2.Czc, obj1.Ac];
             Bwc = [obj2.Bwc; obj1.Bwc*obj2.Dzc_wc];
+%             Buc = 
+
             Ad = [obj2.Ad, zeros(nx1, nx2); obj1.Bwd*obj2.Czd+obj1.Bud*obj2.Cy, obj1.Ad];
             Bwd = [obj2.Bwd; obj1.Bwd*obj2.Dzd_wd+obj1.Bud*obj2.Dy_wd];
             Bud = [obj2.Bud; obj1.Bwd*obj2.Dzd_u+obj1.Bud*obj2.Dy_u];
 
             Czc = [obj1.Dzc_wc*obj2.Czc, obj1.Czc];
             Dzc_wc = obj1.Dzc_wc*obj2.Dzc_wc;
+%             Dzc_uc = 
 
             Czd = [obj1.Dzd_wd*obj2.Czd+obj1.Dzd_uc*obj2.Cy, obj1.Czd];
             Dzd_wd = obj1.Dzd_wd*obj2.Dzd_wd+obj1.Dzd_uc*obj2.Dy_wd;
@@ -706,8 +713,58 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
                 objSD_reconstructed = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_ud, Cy, Dy_wd, Dy_ud);
                 objSD_reconstructed.reconstructor = opts.reconstructor;
 
+            elseif strcmpi(opts.reconstructor, 'foh')
+
+                objSD_reconstructed = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_ud, Cy, Dy_wd, Dy_ud);
+                objSD_reconstructed.reconstructor = opts.reconstructor;
             else
-                error('Only the reconstructor "ZOH" is defined at this moment in time.');
+                error('Only the reconstructor "ZOH" and "FOH" is defined at this moment in time.');
+            end
+        end
+
+        % Perform analysis for various system gains and norms
+        function normValue = analysis(OLSDSystem, performanceIndicator, h, opts)
+
+            arguments
+                OLSDSystem              (1,1) OpenLoopSampledDataSystem
+                performanceIndicator    (1,1) string
+                h                       (1,1) double
+                opts                    (1,1) SDopts = SDopts(h)
+            end
+
+            % Check stability
+            if ~OLSDSystem.isstable(h)
+                warning('The system is not stable and hence does not have a finite norm of any kind.');
+                normValue = nan;
+                return
+            end
+
+            Ac = OLSDSystem.Ac;
+            Bwc = [OLSDSystem.Bwc, OLSDSystem.Buc];
+            Ad = OLSDSystem.Ad;
+            Bwd = [OLSDSystem.Bwd, OLSDSystem.Bud];
+            Czc = OLSDSystem.Czc;
+            Dzc_wc = [OLSDSystem.Dzc_wc, OLSDSystem.Dzc_uc];
+            Czd = [OLSDSystem.Czd; OLSDSystem.Cy];
+            Dzd_wd = [OLSDSystem.Dzd_wd, OLSDSystem.Dzd_ud; OLSDSystem.Dy_wd, OLSDSystem.Dy_ud];
+
+            OLJFSystem = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
+
+            % Check all specified system norms such as Hinf, H2, H2g, L1
+            switch performanceIndicator
+                case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
+                    normValue = JFHinfAnalysis(OLJFSystem, h, opts);
+                case {'H2', 'h2'}
+                    warning('The H2 norm has yet to be implemented in the sampled-data toolbox');
+                    normValue = nan;
+                case {'H2g', 'h2g'}
+                    warning('The generalized H2 norm has yet to be implemented in the sampled-data toolbox');
+                    normValue = nan;
+                case {'L1', 'l1'}
+                    warning('The L1 norm has yet to be implemented in the sampled-data toolbox');
+                    normValue = nan;
+                otherwise
+                    error('The chosen performance indicator string is not a valid choice as it does not represent a system norm or gain.');
             end
         end
 

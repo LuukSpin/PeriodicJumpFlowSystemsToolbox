@@ -416,7 +416,7 @@ classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
                 CLJFSystem              (1,1) JumpFlowSystem
                 performanceIndicator    (1,1) string
                 h                       (1,1) double
-                opts                    (1,1) SDopts = SDopts()
+                opts                    (1,1) SDopts = SDopts(h)
             end
 
             % Check stability
