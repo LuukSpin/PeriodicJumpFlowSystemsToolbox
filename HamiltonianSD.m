@@ -4,8 +4,8 @@ function [A_hat, B_hat, C_hat] = HamiltonianSD(Ac, Bc, Cc, Dc, gamma, h)
 
 n = size(Ac, 1);
 
-Mc_inv = gamma^2-Dc'*Dc;
-Lc_inv = gamma^2-Dc*Dc';
+Mc_inv = eye(size(Dc'*Dc))*gamma^2-Dc'*Dc;
+Lc_inv = eye(size(Dc*Dc'))*gamma^2-Dc*Dc';
 
 % Fill Hamiltonian
 H = [Ac+Bc/Mc_inv*(Dc')*Cc, Bc/Mc_inv*(Bc'); -gamma^2*(Cc')/Lc_inv*Cc, -(Ac+Bc/Mc_inv*(Dc')*Cc)'];
