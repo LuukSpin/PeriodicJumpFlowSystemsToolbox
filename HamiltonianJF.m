@@ -8,7 +8,7 @@ Mc_inv = gamma^2-Dc'*Dc;
 Lc_inv = gamma^2-Dc*Dc';
 
 % Fill Hamiltonian
-H = [Ac+Bc/Mc_inv*(Dc')*Cc, Bc/Mc_inv*(Bc'); -gamma^2*(Cc')/Lc_inv*Cc, -(Ac+Bc/Mc_inv*(Dc')*Cc)'];
+H = [Ac+Bc/Mc_inv*(Dc')*Cc, gamma*Bc/Mc_inv*(Bc'); -gamma*(Cc')/Lc_inv*Cc, -(Ac+Bc/Mc_inv*(Dc')*Cc)'];
 
 % Calculate exponential of the Hamiltonian
 F = expm(-H*h);

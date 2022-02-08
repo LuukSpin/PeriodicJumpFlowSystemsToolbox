@@ -19,34 +19,37 @@ Dd = objCLJF.Dzd_wd;
 nx = objCLJF.nx;
 nwd = objCLJF.nwd;
 nzd = objCLJF.nzd;
-nb = size(B_hat, 2);
-nc = size(C_hat, 1);
+rb = size(B_hat, 2);
+rc = size(C_hat, 1);
+
+% 6 --> 3 --> 6
+% 4 --> 5 --> 4
 
 htmp = 1;
 %Diagonal entries
 entry11 = Ph;
-entry22 = gamma^2*eye(nwd)*htmp;
-entry33 = eye(nb);
-entry44 = Ph;
-entry55 = eye(nc);
-entry66 = eye(nzd)/htmp;
+entry22 = gamma*eye(nwd)*htmp;
+entry33 = gamma*eye(nzd)/htmp;
+entry44 = eye(rc);
+entry55 = Ph;
+entry66 = eye(rb);
 
 %Lower triangular entries
 entry21 = zeros(nwd, nx);
-entry31 = zeros(nb, nx);
-entry32 = zeros(nb, nwd);
-entry41 = Ph*A_hat*Ad;
-entry42 = Ph*A_hat*Bd;
-entry43 = Ph*B_hat;
-entry51 = C_hat*Ad;
-entry52 = C_hat*Bd;
-entry53 = zeros(nc, nb);
-entry54 = zeros(nc, nx);
-entry61 = Cd;
-entry62 = Dd;
-entry63 = zeros(nzd, nb);
-entry64 = zeros(nzd, nx);
-entry65 = zeros(nzd, nc);
+entry31 = Cd;
+entry32 = Dd;
+entry41 = C_hat*Ad;
+entry42 = C_hat*Bd;
+entry43 = zeros(rc, nzd);
+entry51 = Ph*A_hat*Ad;
+entry52 = Ph*A_hat*Bd;
+entry53 = zeros(nx, nzd);
+entry54 = zeros(nx, rc);
+entry61 = zeros(rb, nx);
+entry62 = zeros(rb, nwd);
+entry63 = zeros(rb, nzd);
+entry64 = zeros(rb, rc);
+entry65 = B_hat'*Ph;
 
 HinfLMIAnalysisMatrix = [entry11, entry21', entry31', entry41', entry51', entry61';...
                          entry21, entry22, entry32', entry42', entry52', entry62';...

@@ -17,6 +17,7 @@ if strcmpi(objSD.Loop, 'Open')
     nx = objSD.nx;
     nwc = objSD.nwc;
     nwd = objSD.nwd;
+    nzc = objSD.nzc;
     nzd = objSD.nzd;
     ny = objSD.ny;
 
@@ -25,6 +26,7 @@ if strcmpi(objSD.Loop, 'Open')
         % Flow matrices
         Ac = [objSD.Ac, objSD.Buc; zeros(nu, nx), zeros(nu)];
         Bwc = [objSD.Bwc; zeros(nu, nwc)];
+        Buc = zeros(size(Ac, 1), nu);
 
         % Jump matrices
         Ad = blkdiag(objSD.Ad, zeros(nu));
@@ -32,20 +34,21 @@ if strcmpi(objSD.Loop, 'Open')
         Bud = [objSD.Bud; eye(nu)];
 
         % Continuous-time performance channels matrices
-        Czc = [objSD.Czc, objSD.Dzc_u];
+        Czc = [objSD.Czc, objSD.Dzc_uc];
         Dzc_wc = objSD.Dzc_wc;
+        Dzc_uc = zeros(nzc, nu);
 
         % Discrete-time performance channels matrices
         Czd = [objSD.Czd, zeros(nzd, nu)];
         Dzd_wd = objSD.Dzd_wd;
-        Dzd_u = objSD.Dzd_u;
+        Dzd_ud = objSD.Dzd_ud;
 
         % Controller input matrices
         Cy = [objSD.Cy, zeros(ny, nu)];
         Dy_wd = objSD.Dy_wd;
-        Dy_u = objSD.Dy_u;
+        Dy_ud = objSD.Dy_ud;
 
-        objJF = OpenLoopJumpFlowSystem(Ac, Bwc, Ad, Bwd, Bud, Czc, Dzc_wc, Czd, Dzd_wd, Dzd_u, Cy, Dy_wd, Dy_u);
+        objJF = OpenLoopSampledDataSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_ud, Cy, Dy_wd, Dy_ud);
 
     else
         % At this point on the reconstructor ZOH is defined for this

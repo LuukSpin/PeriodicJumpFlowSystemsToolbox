@@ -11,6 +11,8 @@ function OpenLoopCTPlant = makeCTPlantFromSD(OpenLoopSDSystem)
 %This can only be done when the plant has no jump dynamics (or when the SD
 %system is unweighted)
 
+dimCheck(OpenLoopSDSystem);
+
 AdIdentityCheck = all(OpenLoopSDSystem.Ad == eye(size(OpenLoopSDSystem.Ad)), 'all');
 BwdZeroCheck = all(OpenLoopSDSystem.Bwd == zeros(size(OpenLoopSDSystem.Bwd)), 'all');
 BudZeroCheck =all(OpenLoopSDSystem.Bud == zeros(size(OpenLoopSDSystem.Bud)), 'all');

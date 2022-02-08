@@ -7,7 +7,7 @@ arguments
     opts                (1,1) SDopts = SDopts()
 end
 
-discreteController = minreal(ss(discreteController), [], false);
+% discreteController = minreal(ss(discreteController), [], false);
 
 % Check if the controller is discrete-time controller
 if discreteController.Ts == 0

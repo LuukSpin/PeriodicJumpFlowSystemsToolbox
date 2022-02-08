@@ -52,14 +52,16 @@ classdef SDopts < handle
             obj.nyquist.OutputLabels.Interpreter = 'latex';
 
             obj.LMI.solverOptions = sdpsettings('verbose', 0, 'solver', 'mosek');
+            obj.LMI.schurController = 'no';
             obj.LMI.numericalAccuracy = 1e-8;
             obj.LMI.backoffFactor = 1.01;
+            obj.LMI.controllerConditioning = 'no';
 
             obj.simulation.rule = 1;
             obj.simulation.RelTol = 1e-6;
             obj.simulation.MaxStep = h;
             obj.simulation.options = odeset('RelTol', obj.simulation.RelTol, 'MaxStep', obj.simulation.MaxStep);
-            obj.simulation.Tend = 100*h;
+            obj.simulation.Tend = 300*h;
 
             obj.reconstructor = 'ZOH';
         end

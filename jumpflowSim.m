@@ -19,14 +19,14 @@ JSPAN = [0 ceil(TSPAN(2)/h)]; % simulation interval for discrete jumps
 
 % Flow matrices
 Ac = objJF.Ac;
-Bc = objJF.Bwc;
+Bwc = objJF.Bwc;
 
 % Jump matrices
 Ad = objJF.Ad;
-Bd = objJF.Bwd;
+Bwd = objJF.Bwd;
 
 x0 = zeros(size(Ac, 1)+1, 1);
-[t, ~, x] = HyEQsolver(@(x,t) f(x,wc(t), Ac, Bc), @(x,t) g(x,Ad,Bd,wd(t)), @(x) flowset(x,h), @(x) jumpset(x,h), x0, TSPAN, JSPAN, opts.simulation.rule, opts.simulation.options);
+[t, ~, x] = HyEQsolver(@(x,t) flow(x,wc(t), Ac, Bwc), @(x,t) jump(x,Ad,Bwd,wd(t)), @(x) flowset(x,h), @(x) jumpset(x,h), x0, TSPAN, JSPAN, opts.simulation.rule, opts.simulation.options);
 ind = find(abs(x(:, end) - h) < 1e-9);
 xi = x(:, 1:end-1);
 k = t(ind);

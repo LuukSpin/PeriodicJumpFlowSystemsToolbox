@@ -1,4 +1,4 @@
-function [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamma)
+function [HinfLMIMatrix, A_bar] = fillHinfLMIold(OpenLoopSDSystem, sdpVariableStruct, h, gamma)
 
 %Calculate closed-loop flow matrices from the open-loop Jump/Flow system
 [Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopSDSystem.ClosedLoopFlowMatrices();
@@ -40,49 +40,46 @@ nc = size(sdpVariableStruct.X, 1);
 nwd = size(Dzd_wd, 2);
 nzd = size(Dzd_wd, 1);
 
-% 4--> 8 --> 4
-% 5 --> 6 --> 7 --> 5
-
 h_tmp = 1;
 %Diagonal entries
 entry11 = sdpVariableStruct.Y;
 entry22 = sdpVariableStruct.X;
 entry33 = gamma*eye(nwd)*h_tmp;
-entry44 = gamma*eye(nzd)/h_tmp; % 8 --> 4
-entry55 = eye(rc);              % 7 --> 5
-entry66 = sdpVariableStruct.Y;  % 5 --> 6
-entry77 = sdpVariableStruct.X;  % 6 --> 7
-entry88 = eye(rb);              % 4 --> 8
+entry44 = eye(rb);
+entry55 = sdpVariableStruct.Y;
+entry66 = sdpVariableStruct.X;
+entry77 = eye(rc);
+entry88 = gamma*eye(nzd)/h_tmp;
 
 %Lower triangular entries
 entry21 = eye(nc);
 entry31 = zeros(nwd, nc);
 entry32 = zeros(nwd, nc);
-entry41 = Czd+Dzd_ud*sdpVariableStruct.Omega*Cy;
-entry42 = Czd*sdpVariableStruct.X+Dzd_ud*sdpVariableStruct.Upsilon;
-entry43 = Dzd_wd+Dzd_ud*sdpVariableStruct.Omega*Dy_wd;
-entry51 = C_bar*(Ad+Bud*sdpVariableStruct.Omega*Cy);
-entry52 = C_bar*(Ad*sdpVariableStruct.X+Bud*sdpVariableStruct.Upsilon);
-entry53 = C_bar*(Bwd+Bud*sdpVariableStruct.Omega*Dy_wd);
-entry54 = zeros(rc, nzd);
-entry61 = sdpVariableStruct.Y*A_bar*Ad+sdpVariableStruct.Theta*Cy;
-entry62 = sdpVariableStruct.Gamma;
-entry63 = sdpVariableStruct.Y*A_bar*Bwd+sdpVariableStruct.Theta*Dy_wd;
-entry64 = zeros(nc, nzd);
-entry65 = zeros(nc, rc);
-entry71 = A_bar*(Ad+Bud*sdpVariableStruct.Omega*Cy);
-entry72 = A_bar*(Ad*sdpVariableStruct.X+Bud*sdpVariableStruct.Upsilon);
-entry73 = A_bar*(Bwd+Bud*sdpVariableStruct.Omega*Dy_wd);
-entry74 = zeros(nc, nzd);
-entry75 = zeros(nc, rc);
-entry76 = eye(nc);
-entry81 = zeros(rb, nc);
-entry82 = zeros(rb, nc);
-entry83 = zeros(rb, nwd);
-entry84 = zeros(rb, nzd);
-entry85 = zeros(rb, rc);
-entry86 = B_bar'*sdpVariableStruct.Y;
-entry87 = B_bar';
+entry41 = zeros(rb, nc);
+entry42 = zeros(rb, nc);
+entry43 = zeros(rb, nwd);
+entry51 = sdpVariableStruct.Y*A_bar*Ad+sdpVariableStruct.Theta*Cy;
+entry52 = sdpVariableStruct.Gamma;
+entry53 = sdpVariableStruct.Y*A_bar*Bwd+sdpVariableStruct.Theta*Dy_wd;
+entry54 = sdpVariableStruct.Y*B_bar;
+entry61 = A_bar*(Ad+Bud*sdpVariableStruct.Omega*Cy);
+entry62 = A_bar*(Ad*sdpVariableStruct.X+Bud*sdpVariableStruct.Upsilon);
+entry63 = A_bar*(Bwd+Bud*sdpVariableStruct.Omega*Dy_wd);
+entry64 = B_bar;
+entry65 = eye(nc);
+entry71 = C_bar*(Ad+Bud*sdpVariableStruct.Omega*Cy);
+entry72 = C_bar*(Ad*sdpVariableStruct.X+Bud*sdpVariableStruct.Upsilon);
+entry73 = C_bar*(Bwd+Bud*sdpVariableStruct.Omega*Dy_wd);
+entry74 = zeros(rc, rb);
+entry75 = zeros(rc, nc);
+entry76 = zeros(rc, nc);
+entry81 = Czd+Dzd_ud*sdpVariableStruct.Omega*Cy;
+entry82 = Czd*sdpVariableStruct.X+Dzd_ud*sdpVariableStruct.Upsilon;
+entry83 = Dzd_wd+Dzd_ud*sdpVariableStruct.Omega*Dy_wd;
+entry84 = zeros(nzd, rb);
+entry85 = zeros(nzd, nc);
+entry86 = zeros(nzd, nc);
+entry87 = zeros(nzd, rc);
 
 HinfLMIMatrix = [entry11, entry21', entry31', entry41', entry51', entry61', entry71', entry81';...
                  entry21, entry22, entry32', entry42', entry52', entry62', entry72', entry82';...

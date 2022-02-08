@@ -1,4 +1,4 @@
-classdef JumpFlowSystem < handle & matlab.mixin.CustomDisplay
+classdef JumpFlowSystem < matlab.mixin.CustomDisplay
     %JumpFlowSystem is a constructor for this class
     %   JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd)
     %   constructs a closed-loop jump-flow system. This is a

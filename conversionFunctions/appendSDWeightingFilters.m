@@ -139,29 +139,29 @@ weightedSDSystem.Ac = [unweightedSDSystem.Ac, unweightedSDSystem.Bwc*Wwc.C, zero
     zeros(nx_wd, nx_sd+nx_wc+nx_zc+nx_wd+nx_zd);...
     zeros(nx_zd, nx_sd+nx_wc+nx_zc+nx_wd+nx_zd)];
 weightedSDSystem.Bwc = [unweightedSDSystem.Bwc*Wwc.D; Wwc.B; Wzc.B*unweightedSDSystem.Dzc_wc*Wwc.D; zeros(nx_wd+nx_zd, n_wc)];
-weightedSDSystem.Buc = [unweightedSDSystem.Buc; zeros(nx_wc, nu); Wzc.B*unweightedSDSystem.Dzc_u; zeros(nx_wd+nx_zd, nu)];
+weightedSDSystem.Buc = [unweightedSDSystem.Buc; zeros(nx_wc, nu); Wzc.B*unweightedSDSystem.Dzc_uc; zeros(nx_wd+nx_zd, nu)];
 
 %Jump matrices of the weighted SD system
 weightedSDSystem.Ad = [eye(nx_sd+nx_wc+nx_zc), zeros(nx_sd+nx_wc+nx_zc, nx_wd+nx_zd);...
     zeros(nx_wd, nx_sd+nx_wc+nx_zc), Wwd.A, zeros(nx_wd, nx_zd);...
     Wzd.B*unweightedSDSystem.Czd, zeros(nx_zd, nx_wc+nx_zc), Wzd.B*unweightedSDSystem.Dzd_wd*Wwd.C, Wzd.A];
 weightedSDSystem.Bwd = [zeros(nx_sd+nx_wc+nx_zc, n_wd); Wwd.B; Wzd.B*unweightedSDSystem.Dzd_wd*Wwd.D];
-weightedSDSystem.Bud = [zeros(nx_sd+nx_wc+nx_zc+nx_wd, nu); Wzd.B*unweightedSDSystem.Dzd_u];
+weightedSDSystem.Bud = [zeros(nx_sd+nx_wc+nx_zc+nx_wd, nu); Wzd.B*unweightedSDSystem.Dzd_ud];
 
 %Continuous-time performance channels of weighted SD system
 weightedSDSystem.Czc = [Wzc.D*unweightedSDSystem.Czc, Wzc.D*unweightedSDSystem.Dzc_wc*Wwc.C, Wzc.C, zeros(n_zc, nx_wd+nx_zd)];
 weightedSDSystem.Dzc_wc = Wzc.D*unweightedSDSystem.Dzc_wc*Wwc.D;
-weightedSDSystem.Dzc_u = Wzc.D*unweightedSDSystem.Dzc_u;
+weightedSDSystem.Dzc_uc = Wzc.D*unweightedSDSystem.Dzc_uc;
 
 %Discrete-time performance channels of weighted SD system
 weightedSDSystem.Czd = [Wzd.D*unweightedSDSystem.Czd, zeros(n_zd, nx_wc+nx_zc), Wzd.D*unweightedSDSystem.Dzd_wd*Wwd.C, Wzd.C];
 weightedSDSystem.Dzd_wd = Wzd.D*unweightedSDSystem.Dzd_wd*Wwd.D;
-weightedSDSystem.Dzd_u = Wzd.D*unweightedSDSystem.Dzd_u;
+weightedSDSystem.Dzd_ud = Wzd.D*unweightedSDSystem.Dzd_ud;
 
 %Output matrices of the weighted SD system
 weightedSDSystem.Cy = [unweightedSDSystem.Cy, zeros(ny, nx_wc+nx_zc), unweightedSDSystem.Dy_wd*Wwd.C, zeros(ny, nx_zd)];
 weightedSDSystem.Dy_wd = unweightedSDSystem.Dy_wd*Wwd.D;
-weightedSDSystem.Dy_u = zeros(ny, nu);
+weightedSDSystem.Dy_ud = zeros(ny, nu);
 
 end
 

@@ -4,10 +4,10 @@ function Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariabl
 %
 
 arguments
-    OpenLoopSDSystem    (1,1) OpenLoopSampledDataSystem
-    A_bar               double
-    sdpVariableStruct   struct
-    h                   (1,1) double
+    OpenLoopSDSystem        (1,1) OpenLoopSampledDataSystem
+    A_bar                   double
+    sdpVariableStruct       struct
+    h                       (1,1) double
 end
 
 % Dimensions
