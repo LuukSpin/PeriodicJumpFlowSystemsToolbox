@@ -264,6 +264,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
                 error('The number of rows of "Dy_ud" does not match the controller input dimension');
             end
         end
+        
         %% Operator overloading
         % Override the uplus operator for OpenLoopSampledDataSystem class object
         function SDSystem = uplus(objSD)
@@ -922,6 +923,8 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
                     Controller = 0;
                     synthesisNormValue = nan;
                     CLJFSystem = JumpFlowSystem();
+                case {'Passivity', 'passivity', 'Passive', 'passive', 'Pass', 'pass'}
+                    [Controller, synthesisNormValue, CLJFSystem] = SDPassivesyn(OLSDSystem, h, opts);
                 case {'QRS', 'Quad', 'Quadratic', 'qrs', 'quad', 'quadratic'}
                     warning('Controller synthesis based on quadratic dissipativty is not yet implemented in the sampled-data toolbox');
                     Controller = 0;

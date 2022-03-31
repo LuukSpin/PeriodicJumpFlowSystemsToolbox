@@ -1,4 +1,4 @@
-function [Controller, CLJFSystem, gamma] = SDHinfsyn(OpenLoopSDSystem, h, opts)
+function [Controller, gamma, CLJFSystem] = SDHinfsyn(OpenLoopSDSystem, h, opts)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
