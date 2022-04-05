@@ -4,11 +4,12 @@ function [A_hat, B_hat, C_hat] = Hamiltonian(Ac, Bc, Cc, Dc, h)
 
 n = size(Ac, 1);
 
-Mc_inv = eye(size(Dc'*Dc))*gamma^2-Dc'*Dc;
-Lc_inv = eye(size(Dc*Dc'))*gamma^2-Dc*Dc';
+M3 = Cc';
+M2 = Dc+Dc';
+
 
 % Fill Hamiltonian
-H = [Ac+Bc/Mc_inv*(Dc')*Cc, gamma*Bc/Mc_inv*(Bc'); -gamma*(Cc')/Lc_inv*Cc, -(Ac+Bc/Mc_inv*(Dc')*Cc)'];
+H = [Ac-Bc/M2*M3', Bc/M2*Bc'; -M3/M2*M3', -(Ac-Bc/M2*M3')'];
 
 % Calculate exponential of the Hamiltonian
 F = expm(-H*h);

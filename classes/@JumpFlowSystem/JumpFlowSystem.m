@@ -439,6 +439,10 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
                 case {'L1', 'l1'}
                     warning('The L1 norm has yet to be implemented in the sampled-data toolbox');
                     normValue = nan;
+                case {'Passivity', 'passivity', 'Passive', 'passive', 'Pass', 'pass'}
+                    normValue = JFPassiveAnalysis(CLJFSystem, h, opts);
+                case {'QRS', 'Quad', 'Quadratic', 'qrs', 'quad', 'quadratic'}
+                    warning('Controller synthesis based on quadratic dissipativty is not yet implemented in the sampled-data toolbox');
                 otherwise
                     error('The chosen performance indicator string is not a valid choice as it does not represent a system norm or gain.');
             end

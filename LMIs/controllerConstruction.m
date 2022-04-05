@@ -29,7 +29,7 @@ Upsilon_value = value(sdpVariableStruct.Upsilon);
 Omega_value = value(sdpVariableStruct.Omega);
 
 U = X_value;
-V = inv(X_value)-Y_value;
+V = (inv(X_value)-Y_value)';
 
 % Calculate controller
 controllerMat = [V, Y_value*A_bar*Bud; zeros(nu, size(V, 2)), eye(nu)]\[Gamma_value-Y_value*A_bar*Ad*X_value, Theta_value; Upsilon_value, Omega_value]/[U', zeros(size(Y_value, 1), ny); Cy*X_value, eye(ny)];
