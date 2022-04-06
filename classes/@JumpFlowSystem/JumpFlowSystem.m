@@ -424,7 +424,7 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
             end
 
             % Check stability
-            if ~CLJFSystem.isstable(opts.simulation.SampleTime)
+            if ~CLJFSystem.isstable(opts)
                 warning('The system is not stable and hence does not have a finite norm of any kind.');
                 normValue = nan;
                 return
@@ -433,7 +433,7 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
             % Check all specified system norms such as Hinf, H2, H2g, L1
             switch performanceIndicator
                 case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
-                    normValue = JFHinfAnalysis(CLJFSystem, h, opts);
+                    normValue = JFHinfAnalysis(CLJFSystem, opts);
                 case {'H2', 'h2'}
                     warning('The H2 norm has yet to be implemented in the sampled-data toolbox');
                     normValue = nan;

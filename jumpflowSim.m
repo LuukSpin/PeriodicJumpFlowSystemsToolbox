@@ -1,4 +1,4 @@
-function [t, zc,k, zd] = jumpflowSim(objJF, wc, wd, h, opts)
+function [t, zc,k, zd] = jumpflowSim(objJF, wc, wd, opts)
 %wc and wd should be function handles, otherwise the HyEQsolver cannot
 %produce an output.
 
@@ -6,10 +6,10 @@ arguments
     objJF   (1,1) JumpFlowSystem
     wc
     wd
-    h       (1,1) double
-    opts    SDopts = SDopts(h)
+    opts    SDopts
 end
 
+h = opts.simulation.SampleTime;
 
 % Rule for jumps
 % rule = 1 -> priority for jumps

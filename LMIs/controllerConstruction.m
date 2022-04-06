@@ -7,7 +7,7 @@ arguments
     OpenLoopSDSystem        (1,1) OpenLoopSampledDataSystem
     A_bar                   double
     sdpVariableStruct       struct
-    opts                       (1,1) SDopts
+    opts                    (1,1) SDopts
 end
 
 % Dimensions

@@ -1,20 +1,19 @@
-function [sdpVariables, A_bar] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariableStruct, h, performanceIndicator, opts)
+function [sdpVariables, A_bar, gamma] = controllerConditioning(OpenLoopSDSystem, sdpVariableStruct, opts, performanceIndicator, gamma)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
 arguments
     OpenLoopSDSystem        (1,1) OpenLoopSampledDataSystem
-    gamma                   (1,1) double
     sdpVariableStruct       struct
-    h                       (1,1) double
+    opts                    SDopts
     performanceIndicator    string = 'Hinf'
-    opts                    SDopts = SDopts()
+    gamma                   double = 1
 end
 
 backoff = opts.LMI.backoffFactor;
 numAcc = opts.LMI.numericalAccuracy;
-solverSettings = opts.LMI.solverOptions';
+solverSettings = opts.LMI.solverOptions;
 alphabackoff = 25;
 
 % Dimensions;
@@ -26,7 +25,7 @@ nc = size(sdpVariableStruct.X, 1);
 gamValue = gamma*backoff;
 
 if strcmpi(performanceIndicator, 'Hinf')
-    [synthesisMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamValue);
+    [synthesisMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, opts, gamValue);
 else
     error('Only "Hinf" controller synthesis is specified at the moment.');
 end

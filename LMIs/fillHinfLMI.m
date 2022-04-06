@@ -1,10 +1,10 @@
-function [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, h, gamma)
+function [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariableStruct, opts, gamma)
 
 %Calculate closed-loop flow matrices from the open-loop Jump/Flow system
-[Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopSDSystem.ClosedLoopFlowMatrices();
+[Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = ClosedLoopFlowMatrices(OpenLoopSDSystem, opts);
 
 %Calculate Hamiltonian using the closed-loop flow matrices and determien A, B and C_hat
-[A_hat, B_hat, C_hat] = HamiltonianSD(Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF, gamma, h);
+[A_hat, B_hat, C_hat] = HamiltonianSD(Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF, gamma, opts);
 
 % Determine rank of B_hat and C_hat
 rb = size(B_hat, 2);

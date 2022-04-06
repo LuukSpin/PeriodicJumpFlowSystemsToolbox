@@ -5,7 +5,7 @@ function [Controller, gamma, CLJFSystem] = SDHinfsyn(OpenLoopSDSystem, opts)
 
 arguments
     OpenLoopSDSystem    (1,1) OpenLoopSampledDataSystem
-    opts                (1,1) SDopts = SDopts();
+    opts                (1,1) SDopts
 end
 
 dimCheck(OpenLoopSDSystem);
@@ -51,10 +51,10 @@ initialfeas = 0;
 % tolerance or the maximum amount of iterations is reached
 while N < Nmax
     N = N + 1;
-    
+
     if ~xor((a(2) - a(1)) > tol, N < Nmax-1) || last
         gamma = mean(a);
-        
+
         % LMI variables
         sdpVariables.Y = Y;
         sdpVariables.X = X;
@@ -66,7 +66,7 @@ while N < Nmax
         % Fill the H-infinity LMI
         [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariables, h, gamma);
         HinfLMI = HinfLMIMatrix >= numAcc*eye(size(HinfLMIMatrix));
-        
+
         % Add a constraint
         constraint = [sdpVariables.Y, eye(nx, nc); eye(nc, nx), sdpVariables.X] >= numAcc*eye(size(blkdiag(sdpVariables.Y, sdpVariables.X)));
 
@@ -76,10 +76,10 @@ while N < Nmax
         else
             LMI = [HinfLMI, constraint];
         end
-        
+
         rng(1);
         diagnostics = optimize(LMI, [], opts.LMI.solverOptions);
-        
+
         if diagnostics.problem == 0
             a(2) = mean(a);
             initialfeas = 1;
@@ -97,7 +97,7 @@ while N < Nmax
         last = 1;
         a(1) = a(2);
     end
-    
+
 end
 
 % Determine if bisection-based search was succesful
@@ -111,10 +111,6 @@ else
     return
 end
 
-if strcmpi(opts.LMI.controllerConditioning, 'yes')
-    [sdpVariables, A_bar] = controllerConditioning(OpenLoopSDSystem, gamma, sdpVariables, h, 'Hinf', opts);
-end
-
 Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariables, h);
 
 K_zpk = zpk(Controller);
@@ -124,10 +120,28 @@ K_poles = K_zpk.p{:};
 nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
 nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
 
+if strcmpi(opts.LMI.controllerConditioning, 'yes') || (nrUnstabPole+nrNonMinPhaseZero>0)
+    [sdpVariables, A_bar] = controllerConditioning(OpenLoopSDSystem, sdpVariables, opts, 'Hinf', gamma);
+    
+    if (nrUnstabPole+nrNonMinPhaseZero>0) && ~strcmpi(opts.LMI.controllerConditioning, 'yes')
+        warning('Controller conditioning is applied even though this was not specified in "opts.LMI.controllerConditioning". This is done in order to reduce poles and zeros outside of the unit circle.');
+    end
+
+    Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariables, opts);
+
+    K_zpk = zpk(Controller);
+    K_zeros = K_zpk.z{:};
+    K_poles = K_zpk.p{:};
+
+    nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
+    nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
+
+end
+
 if nrUnstabPole+nrNonMinPhaseZero>0
     sprintf('The synthesized controller contains %d no. of unstable poles and %d no. of non-minimum phase zeros.', nrUnstabPole, nrNonMinPhaseZero);
 end
 
-CLJFSystem = OpenLoopSDSystem.lft(Controller);
+CLJFSystem = OpenLoopSDSystem.lft(Controller, opts);
 
 end
