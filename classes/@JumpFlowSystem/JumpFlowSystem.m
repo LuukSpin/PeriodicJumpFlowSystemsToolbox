@@ -12,7 +12,7 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
     %   z_c    = Czc*x + Dzc_wc*w_c
     %   z_d    = Czd*x + Dzd_wd*w_d
 
-    properties
+    properties (SetAccess = private)
         %Flow matrices
         Ac      double {mustBeFinite(Ac)}
         Bwc     double {mustBeFinite(Bwc)}

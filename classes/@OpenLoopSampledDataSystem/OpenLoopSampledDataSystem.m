@@ -10,7 +10,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
     %   z_d    = Czd*x + Dzd_wd*w_d + Dzd_ud*\hat{u}
     %   y      = Cy*x  + Dy_wd*w_d  + Dy_ud*\hat{u}
 
-    properties
+    properties (SetAccess = private)
         %Controller output to state matrices
         Buc     double {mustBeFinite(Buc)}
         Bud     double {mustBeFinite(Bud)}
@@ -817,23 +817,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
             Dzd_wd = [OLSDSystem.Dzd_wd, OLSDSystem.Dzd_ud; OLSDSystem.Dy_wd, OLSDSystem.Dy_ud];
 
             OLJFSystem = JumpFlowSystem(Ac, Bwc, Ad, Bwd, Czc, Dzc_wc, Czd, Dzd_wd);
-
-            % Check all specified system norms such as Hinf, H2, H2g, L1
-            switch performanceIndicator
-                case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
-                    normValue = JFHinfAnalysis(OLJFSystem, h, opts);
-                case {'H2', 'h2'}
-                    warning('The H2 norm has yet to be implemented in the sampled-data toolbox');
-                    normValue = nan;
-                case {'H2g', 'h2g'}
-                    warning('The generalized H2 norm has yet to be implemented in the sampled-data toolbox');
-                    normValue = nan;
-                case {'L1', 'l1'}
-                    warning('The L1 norm has yet to be implemented in the sampled-data toolbox');
-                    normValue = nan;
-                otherwise
-                    error('The chosen performance indicator string is not a valid choice as it does not represent a system norm or gain.');
-            end
+            normValue = analysis(OLJFSystem, performanceIndicator, opts);
         end
 
         % Determine closed-loop flow matrices based an open-loop sampled-data
