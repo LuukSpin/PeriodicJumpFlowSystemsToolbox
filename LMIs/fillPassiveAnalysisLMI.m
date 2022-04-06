@@ -1,4 +1,4 @@
-function [HinfLMIAnalysisMatrix, B_hat] = fillPassiveAnalysisLMI(objCLJF, Ph, h)
+function [HinfLMIAnalysisMatrix, B_hat] = fillPassiveAnalysisLMI(objCLJF, Ph, opts)
 
 % Flow matrices
 Ac = objCLJF.Ac;
@@ -13,7 +13,7 @@ Cd = objCLJF.Czd;
 Dd = objCLJF.Dzd_wd;
 
 %Calculate Hamiltonian using the closed-loop flow matrices and determien A, B and C_hat
-[A_hat, B_hat, C_hat] = Hamiltonian(Ac, Bc, Cc, Dc, h);
+[A_hat, B_hat, C_hat] = Hamiltonian(Ac, Bc, Cc, Dc, opts);
 
 %Dimensions
 nx = objCLJF.nx;

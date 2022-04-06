@@ -362,7 +362,12 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
 
         %% System theoretic properties
         % Stability function
-        function stabilityFlag = isstable(objJF, h)
+        function stabilityFlag = isstable(objJF, OptsOrTs)
+            if isa(OptsOrTs, 'SDopts')
+                h = OptsOrTs.simulation.SampleTime;
+            else
+                h = OptsOrTs;
+            end
             stabilityFlag = all(abs(eig(expm(objJF.Ac*h)*objJF.Ad)) < 1);
         end
 
@@ -410,17 +415,16 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
         end
 
         % Perform analysis for various system gains and norms
-        function normValue = analysis(CLJFSystem, performanceIndicator, h, opts)
+        function normValue = analysis(CLJFSystem, performanceIndicator, opts)
 
             arguments
                 CLJFSystem              (1,1) JumpFlowSystem
                 performanceIndicator    (1,1) string
-                h                       (1,1) double
-                opts                    (1,1) SDopts = SDopts(h)
+                opts                    (1,1) SDopts
             end
 
             % Check stability
-            if ~CLJFSystem.isstable(h)
+            if ~CLJFSystem.isstable(opts.simulation.SampleTime)
                 warning('The system is not stable and hence does not have a finite norm of any kind.');
                 normValue = nan;
                 return
@@ -440,7 +444,7 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
                     warning('The L1 norm has yet to be implemented in the sampled-data toolbox');
                     normValue = nan;
                 case {'Passivity', 'passivity', 'Passive', 'passive', 'Pass', 'pass'}
-                    normValue = JFPassiveAnalysis(CLJFSystem, h, opts);
+                    normValue = JFPassiveAnalysis(CLJFSystem, opts);
                 case {'QRS', 'Quad', 'Quadratic', 'qrs', 'quad', 'quadratic'}
                     warning('Controller synthesis based on quadratic dissipativty is not yet implemented in the sampled-data toolbox');
                 otherwise

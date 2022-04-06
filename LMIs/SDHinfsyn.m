@@ -1,11 +1,10 @@
-function [Controller, gamma, CLJFSystem] = SDHinfsyn(OpenLoopSDSystem, h, opts)
+function [Controller, gamma, CLJFSystem] = SDHinfsyn(OpenLoopSDSystem, opts)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
 arguments
     OpenLoopSDSystem    (1,1) OpenLoopSampledDataSystem
-    h                   (1,1) double
     opts                (1,1) SDopts = SDopts();
 end
 
@@ -15,6 +14,7 @@ if strcmpi(OpenLoopSDSystem.reconstructor, 'unspecified')
     OpenLoopSDSystem = OpenLoopSDSystem.applyReconstructor(opts);
 end
 
+h = opts.simulation.SampleTime;
 numAcc = opts.LMI.numericalAccuracy;
 
 % Dimensions;

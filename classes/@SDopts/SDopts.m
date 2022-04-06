@@ -13,7 +13,7 @@ classdef SDopts < handle
         % Constructor
         function obj = SDopts(h)
             arguments
-                h (1,1) double {mustBeGreaterThanOrEqual(h, 0)}= 0;
+                h (1,1) double {mustBeGreaterThanOrEqual(h, 0)}
             end
 
             obj.figure.Position.LeftHalf       = [1.8      41.8    766.4   740.8];
@@ -62,6 +62,7 @@ classdef SDopts < handle
             obj.simulation.MaxStep = h;
             obj.simulation.options = odeset('RelTol', obj.simulation.RelTol, 'MaxStep', obj.simulation.MaxStep);
             obj.simulation.Tend = 300*h;
+            obj.simulation.SampleTime = h;
 
             obj.reconstructor = 'ZOH';
         end

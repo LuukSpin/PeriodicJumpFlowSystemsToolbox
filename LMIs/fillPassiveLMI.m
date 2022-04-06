@@ -1,10 +1,10 @@
-function [PassiveLMIMatrix, A_bar] = fillPassiveLMI(OpenLoopSDSystem, sdpVariableStruct, h)
+function [PassiveLMIMatrix, A_bar] = fillPassiveLMI(OpenLoopSDSystem, sdpVariableStruct, opts)
 
 %Calculate closed-loop flow matrices from the open-loop Jump/Flow system
-[Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopSDSystem.ClosedLoopFlowMatrices();
+[Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF] = OpenLoopSDSystem.ClosedLoopFlowMatrices(opts);
 
 %Calculate Hamiltonian using the closed-loop flow matrices and determien A, B and C_hat
-[A_hat, B_hat, C_hat] = Hamiltonian(Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF, h);
+[A_hat, B_hat, C_hat] = Hamiltonian(Aflow_JF, Bflow_JF, Cflow_JF, Dflow_JF, opts);
 
 % Determine rank of B_hat and C_hat
 rb = size(B_hat, 2);

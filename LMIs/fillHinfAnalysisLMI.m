@@ -1,4 +1,4 @@
-function [HinfLMIAnalysisMatrix, B_hat] = fillHinfAnalysisLMI(objCLJF, Ph, h, gamma)
+function [HinfLMIAnalysisMatrix, B_hat] = fillHinfAnalysisLMI(objCLJF, Ph, opts, gamma)
 
 % Flow matrices
 Ac = objCLJF.Ac;
@@ -13,7 +13,7 @@ Cd = objCLJF.Czd;
 Dd = objCLJF.Dzd_wd;
 
 %Calculate Hamiltonian using the closed-loop flow matrices and determien A, B and C_hat
-[A_hat, B_hat, C_hat] = HamiltonianJF(Ac, Bc, Cc, Dc, gamma, h);
+[A_hat, B_hat, C_hat] = HamiltonianJF(Ac, Bc, Cc, Dc, gamma, opts);
 
 %Dimensions
 nx = objCLJF.nx;

@@ -1,8 +1,7 @@
-function gamma = JFHinfAnalysis(objCLJF, h, opts)
+function gamma = JFHinfAnalysis(objCLJF, opts)
 arguments
     objCLJF (1,1) JumpFlowSystem
-    h       (1,1) double
-    opts    (1,1) SDopts = SDopts()
+    opts    (1,1) SDopts
 end
 
 % Dimensions;
@@ -23,8 +22,7 @@ last = 0;
 initialfeas = 0;
 
 % Stability check
-stabCheck = isstable(objCLJF, h);
-
+stabCheck = isstable(objCLJF, opts);
 
 % Run the bisection based search until gamma is within the specified
 % tolerance or the maximum amount of iterations is reached
@@ -36,7 +34,7 @@ if stabCheck
             gamma = mean(a);
             
             % Fill the H-infinity LMI
-            [HinfLMIAnalysisMatrix, B_hat] = fillHinfAnalysisLMI(objCLJF, Ph, h, gamma);
+            [HinfLMIAnalysisMatrix, B_hat] = fillHinfAnalysisLMI(objCLJF, Ph, opts, gamma);
             HinfAnalysisLMI = (HinfLMIAnalysisMatrix+HinfLMIAnalysisMatrix')/2 >= numAcc*eye(size(HinfLMIAnalysisMatrix));
             
             

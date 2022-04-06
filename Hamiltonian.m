@@ -1,7 +1,8 @@
-function [A_hat, B_hat, C_hat] = Hamiltonian(Ac, Bc, Cc, Dc, h)
+function [A_hat, B_hat, C_hat] = Hamiltonian(Ac, Bc, Cc, Dc, opts)
 %HAMILTONIANJF determines the 
 %   Detailed explanation goes here
 
+h = opts.simulation.SampleTime;
 n = size(Ac, 1);
 
 M3 = Cc';

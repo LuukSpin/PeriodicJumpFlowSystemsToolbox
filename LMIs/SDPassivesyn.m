@@ -1,12 +1,11 @@
-function [Controller, PassiveFlag, CLJFSystem] = SDPassivesyn(OpenLoopSDSystem, h, opts)
+function [Controller, PassiveFlag, CLJFSystem] = SDPassivesyn(OpenLoopSDSystem, opts)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
 arguments
     OpenLoopSDSystem    (1,1) OpenLoopSampledDataSystem
-    h                   (1,1) double
-    opts                (1,1) SDopts = SDopts();
+    opts                (1,1) SDopts
 end
 
 dimCheck(OpenLoopSDSystem);
@@ -15,6 +14,7 @@ if strcmpi(OpenLoopSDSystem.reconstructor, 'unspecified')
     OpenLoopSDSystem = OpenLoopSDSystem.applyReconstructor(opts);
 end
 
+h = opts.simulation.SampleTime;
 numAcc = opts.LMI.numericalAccuracy;
 
 % Dimensions;
@@ -41,7 +41,7 @@ sdpVariables.Upsilon = Upsilon;
 sdpVariables.Omega = Omega;
 
 % Fill the H-infinity LMI
-[HinfLMIMatrix, A_bar] = fillPassiveLMI(OpenLoopSDSystem, sdpVariables, h);
+[HinfLMIMatrix, A_bar] = fillPassiveLMI(OpenLoopSDSystem, sdpVariables, opts);
 HinfLMI = HinfLMIMatrix >= numAcc*eye(size(HinfLMIMatrix));
 
 % Add a constraint
@@ -56,8 +56,6 @@ end
 
 diagnostics = optimize(LMI, [], opts.LMI.solverOptions);
 
-
-
 % Determine if bisection-based search was succesful
 if diagnostics.problem == 0
     PassiveFlag = true;
@@ -69,7 +67,7 @@ else
     return
 end
 
-Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariables, h);
+Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariables, opts);
 
 K_zpk = zpk(Controller);
 K_zeros = K_zpk.z{:};
@@ -82,6 +80,6 @@ if nrUnstabPole+nrNonMinPhaseZero>0
     sprintf('The synthesized controller contains %d no. of unstable poles and %d no. of non-minimum phase zeros.', nrUnstabPole, nrNonMinPhaseZero);
 end
 
-CLJFSystem = OpenLoopSDSystem.lft(Controller);
+CLJFSystem = OpenLoopSDSystem.lft(Controller, opts);
 
 end

@@ -1,4 +1,4 @@
-function Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariableStruct, h)
+function Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariableStruct, opts)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -7,7 +7,7 @@ arguments
     OpenLoopSDSystem        (1,1) OpenLoopSampledDataSystem
     A_bar                   double
     sdpVariableStruct       struct
-    h                       (1,1) double
+    opts                       (1,1) SDopts
 end
 
 % Dimensions
@@ -33,6 +33,6 @@ V = (inv(X_value)-Y_value)';
 
 % Calculate controller
 controllerMat = [V, Y_value*A_bar*Bud; zeros(nu, size(V, 2)), eye(nu)]\[Gamma_value-Y_value*A_bar*Ad*X_value, Theta_value; Upsilon_value, Omega_value]/[U', zeros(size(Y_value, 1), ny); Cy*X_value, eye(ny)];
-Controller = minreal(ss(controllerMat(1:nc, 1:nc), controllerMat(1:nc, nc+1:end), controllerMat(nc+1:end, 1:nc), controllerMat(nc+1:end, nc+1:end), h), [], false);
+Controller = minreal(ss(controllerMat(1:nc, 1:nc), controllerMat(1:nc, nc+1:end), controllerMat(nc+1:end, 1:nc), controllerMat(nc+1:end, nc+1:end), opts.simulation.SampleTime), [], false);
 
 end
