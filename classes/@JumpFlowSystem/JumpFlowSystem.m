@@ -362,21 +362,20 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
 
         %% System theoretic properties
         % Stability function
-        function stabilityFlag = isstable(objJF, OptsOrTs)
-            if isa(OptsOrTs, 'SDopts')
-                h = OptsOrTs.simulation.SampleTime;
-            else
-                h = OptsOrTs;
+        function stabilityFlag = isstable(objJF, opts)
+            arguments
+                objJF   (1,1) JumpFlowSystem
+                opts    (1,1) SDopts
             end
+            h = opts.simulation.SampleTime;
             stabilityFlag = all(abs(eig(expm(objJF.Ac*h)*objJF.Ad)) < 1);
         end
 
         % Reachability function
-        function reachabilityFlag = isreachable(objJF, h, opts)
+        function reachabilityFlag = isreachable(objJF, opts)
             arguments
                 objJF   (1,1) JumpFlowSystem
-                h       (1,1) double
-                opts    (1,1) SDopts = SDopts()
+                opts    (1,1) SDopts
             end
 
             Ac = objJF.Ac;
@@ -403,15 +402,15 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
         end
 
         % Strong reachability function
-        function strongReachabilityFlag = isstrongreachable(objJF, h, opts)
+        function strongReachabilityFlag = isstrongreachable(objJF, opts)
         end
 
         % Controllability function
-        function controllabilityFlag = iscontrollable(objJF, h, opts)
+        function controllabilityFlag = iscontrollable(objJF, opts)
         end
        
         % Stabilizability function
-        function stabilizabilityFlag = isstabilizable(objJF, h, opts)
+        function stabilizabilityFlag = isstabilizable(objJF, opts)
         end
 
         % Perform analysis for various system gains and norms

@@ -69,7 +69,7 @@ end
 
 % Determine if bisection-based search was succesful
 if initialfeas
-    if isstable(objCLJF, h)
+    if isstable(objCLJF, opts.simulation.SampleTime)
         gamma = a(2);
     else
         gamma = nan;

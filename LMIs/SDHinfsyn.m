@@ -64,7 +64,7 @@ while N < Nmax
         sdpVariables.Omega = Omega;
 
         % Fill the H-infinity LMI
-        [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariables, h, gamma);
+        [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariables, opts, gamma);
         HinfLMI = HinfLMIMatrix >= numAcc*eye(size(HinfLMIMatrix));
 
         % Add a constraint

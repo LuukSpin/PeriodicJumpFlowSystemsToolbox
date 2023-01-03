@@ -8,41 +8,41 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
     %   Zero-Order-Hold. This system has the following state-space
     %   realization:
     %
-    %  \dot{x} = Ac*x   + Bwc*w_c     + Buc*u
-    %   x^+    = Ad*x   + Bwd*w_d     + Bud*\hat{u}
-    %   z_c    = Czc*x  + Dzc_wc*w_c  + Dzc_u*u
-    %   z_d    = Czd*x  + Dzd_wd*w_d  + Dzd_u*\hat{u}
-    %   y_c    = Cyc*x  + Dyc_wd*w_d  + Dyc_u*\hat{u}
-    %   y_d    = Cyd*x  + Dyd_wd*w_d  + Dyd_u*\hat{u}
+    %  \dot{x} = Ac*x   + Bwc*w_c     + Buf*u_f
+    %   x^+    = Ad*x   + Bwd*w_d     + Buj*u_j
+    %   z_c    = Czc*x  + Dzc_wc*w_c  + Dzc_uf*u_f
+    %   z_d    = Czd*x  + Dzd_wd*w_d  + Dzd_uj*u_j
+    %   y_f    = Cyc*x  + Dyc_wd*w_d  + Dyc_uf*u_f
+    %   y_j    = Cyd*x  + Dyd_wd*w_d  + Dyd_uj*u_j
 
     properties
         %Controller output to state matrices
-        Buc     double {mustBeFinite(Buc)}
-        Bud     double {mustBeFinite(Bud)}
+        Buf     double {mustBeFinite(Buf)}
+        Buj     double {mustBeFinite(Buj)}
 
         %Controller output to performance channel feed-through terms
-        Dzc_uc  double {mustBeFinite(Dzc_uc)}
-        Dzd_ud  double {mustBeFinite(Dzd_ud)}
+        Dzc_uf  double {mustBeFinite(Dzc_uf)}
+        Dzd_uj  double {mustBeFinite(Dzd_uj)}
 
         %Controller input matrices
-        Cyc     double {mustBeFinite(Cyc)}
-        Dyc_wc  double {mustBeFinite(Dyc_wc)}
-        Dyc_uc  double {mustBeFinite(Dyc_uc)}
-        Cyd     double {mustBeFinite(Cyd)}
-        Dyd_wd  double {mustBeFinite(Dyd_wd)}
-        Dyd_ud  double {mustBeFinite(Dyd_ud)}
+        Cyf     double {mustBeFinite(Cyf)}
+        Dyf_wc  double {mustBeFinite(Dyf_wc)}
+        Dyf_uf  double {mustBeFinite(Dyf_uf)}
+        Cyj     double {mustBeFinite(Cyj)}
+        Dyj_wd  double {mustBeFinite(Dyj_wd)}
+        Dyj_uj  double {mustBeFinite(Dyj_uj)}
     end
 
     properties (Dependent = true, SetAccess = private, GetAccess = 'public')
-        nuc     (1,1) double
-        nud     (1,1) double
-        nyc     (1,1) double
-        nyd     (1,1) double
+        nuf     (1,1) double
+        nuj     (1,1) double
+        nyf     (1,1) double
+        nyj     (1,1) double
     end
 
     methods
         %% Constructor
-        function obj = OpenLoopJumpFlowSystem(Ac, Bwc, Buc, Ad, Bwd, Bud, Czc, Dzc_wc, Dzc_uc, Czd, Dzd_wd, Dzd_ud, Cyc, Dyc_wc, Dyc_uc, Cyd, Dyd_wd, Dyd_ud)
+        function obj = OpenLoopJumpFlowSystem(Ac, Bwc, Buf, Ad, Bwd, Buj, Czc, Dzc_wc, Dzc_uf, Czd, Dzd_wd, Dzd_uj, Cyf, Dyf_wc, Dyf_uf, Cyj, Dyj_wd, Dyj_uj)
 
             % Here the arguments is setup such that the input arguments are
             % variable. That means that this constructor accepts 0 up to 15
@@ -51,22 +51,22 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             arguments
                 Ac = []
                 Bwc = zeros(size(Ac, 1), 0)
-                Buc = zeros(size(Ac, 1), 0)
+                Buf = zeros(size(Ac, 1), 0)
                 Ad = eye(size(Ac))
                 Bwd = zeros(size(Ac, 1), 0)
-                Bud = zeros(size(Ac, 1), 0)
+                Buj = zeros(size(Ac, 1), 0)
                 Czc = zeros(0, size(Ac, 1))
                 Dzc_wc = zeros(size(Czc, 1), size(Bwc, 2))
-                Dzc_uc = zeros(size(Czc, 1), size(Buc, 2))
+                Dzc_uf = zeros(size(Czc, 1), size(Buf, 2))
                 Czd = zeros(0, size(Ac, 1))
                 Dzd_wd = zeros(size(Czd, 1), size(Bwd, 2))
-                Dzd_ud = zeros(size(Czd, 1), size(Bud, 2))
-                Cyc = zeros(0, size(Ac, 1))
-                Dyc_wc = zeros(size(Cyc, 1), size(Bwc, 2))
-                Dyc_uc = zeros(size(Cyc, 1), size(Buc, 2))
-                Cyd = zeros(0, size(Ac, 1))
-                Dyd_wd = zeros(size(Cyd, 1), size(Bwd, 2))
-                Dyd_ud = zeros(size(Cyd, 1), size(Bud, 2))
+                Dzd_uj = zeros(size(Czd, 1), size(Buj, 2))
+                Cyf = zeros(0, size(Ac, 1))
+                Dyf_wc = zeros(size(Cyf, 1), size(Bwc, 2))
+                Dyf_uf = zeros(size(Cyf, 1), size(Buf, 2))
+                Cyj = zeros(0, size(Ac, 1))
+                Dyj_wd = zeros(size(Cyj, 1), size(Bwd, 2))
+                Dyj_uj = zeros(size(Cyj, 1), size(Buj, 2))
 
             end
 
@@ -79,11 +79,11 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             % Check controller output to state matrices
             nx = size(Ac, 1);
 
-            if nx ~= size(Buc, 1)
+            if nx ~= size(Buf, 1)
                 error('The number of rows of "Buc" does not match the state dimension');
             end
 
-            if nx ~= size(Bud, 1)
+            if nx ~= size(Buj, 1)
                 error('The number of rows of "Bud" does not match the state dimension');
             end
 
@@ -91,87 +91,87 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             nzc = size(Czc, 1);
             nzd = size(Czd, 1);
 
-            if nzc ~= size(Dzc_uc, 1)
+            if nzc ~= size(Dzc_uf, 1)
                 error('The number of rows of "Dzc_uc" does not match the amount of continuous-time performance channels');
             end
 
-            if nzd ~= size(Dzd_ud, 1)
+            if nzd ~= size(Dzd_uj, 1)
                 error('The number of rows of "Dzd_ud" does not match the amount of discrete-time performance channels');
             end
 
-            nud = size(Bud, 2);
-            nuc = size(Buc, 2);
+            nud = size(Buj, 2);
+            nuc = size(Buf, 2);
 
-            if nuc ~= size(Dzc_uc, 2)
+            if nuc ~= size(Dzc_uf, 2)
                 error('The number of columns of "Dzd_uc" does not match the continuous-time controller output dimension');
             end
 
-            if nud ~= size(Dzd_ud, 2)
+            if nud ~= size(Dzd_uj, 2)
                 error('The number of columns of "Dzd_ud" does not match the discrete-time controller output dimension');
             end
 
             % Check controller input matrices
-            if nx ~= size(Cyc, 2)
+            if nx ~= size(Cyf, 2)
                 error('The number of columns of "Cyc" does not match the state dimension');
             end
 
-            if nx ~= size(Cyd, 2)
+            if nx ~= size(Cyj, 2)
                 error('The number of columns of "Cyd" does not match the state dimension');
             end
 
-            nyc = size(Cyc, 1);
-            nyd = size(Cyd, 1);
+            nyc = size(Cyf, 1);
+            nyd = size(Cyj, 1);
 
-            if nyc ~= size(Dyc_wc, 1)
+            if nyc ~= size(Dyf_wc, 1)
                 error('The number of rows of "Dyc_wc" does not match the continuous-time controller input dimension');
             end
 
-            if nyd ~= size(Dyd_wd, 1)
+            if nyd ~= size(Dyj_wd, 1)
                 error('The number of rows of "Dyd_wd" does not match the discrete-time controller input dimension');
             end
 
             nwc = size(Bwc, 2);
             nwd = size(Bwd, 2);
 
-            if nwc ~= size(Dyc_wc, 2)
+            if nwc ~= size(Dyf_wc, 2)
                 error('The number of columns of "Dyc_wc" does not match the amount of continuous-time disturbance channels');
             end
 
-            if nwd ~= size(Dyd_wd, 2)
+            if nwd ~= size(Dyj_wd, 2)
                 error('The number of columns of "Dyd_wd" does not match the amount of discrete-time disturbance channels');
             end
 
-            if nyc ~= size(Dyc_uc, 1)
+            if nyc ~= size(Dyf_uf, 1)
                 error('The number of rows of "Dyc_uc" does not match the continuous-time controller input dimension');
             end
 
-            if nuc ~= size(Dyc_uc, 2)
+            if nuc ~= size(Dyf_uf, 2)
                 error('The number of columns of "Dyc_uc" does not match the continuous-time controller output dimension');
             end
 
-            if nyd ~= size(Dyd_ud, 1)
+            if nyd ~= size(Dyj_uj, 1)
                 error('The number of rows of "Dyd_ud" does not match the discrete-time controller input dimension');
             end
 
-            if nud ~= size(Dyd_ud, 2)
+            if nud ~= size(Dyj_uj, 2)
                 error('The number of columns of "Dyd_ud" does not match the discrete-time controller output dimension');
             end
 
             % Controller output to state matrix
-            obj.Buc = Buc;
-            obj.Bud = Bud;
+            obj.Buf = Buf;
+            obj.Buj = Buj;
 
             % Controller output to performance channels feed-through matrix
-            obj.Dzc_uc = Dzc_uc;
-            obj.Dzd_ud = Dzd_ud;
+            obj.Dzc_uf = Dzc_uf;
+            obj.Dzd_uj = Dzd_uj;
 
             % Controller input matrices
-            obj.Cyc = Cyc;
-            obj.Dyc_wc = Dyc_wc;
-            obj.Dyc_uc = Dyc_uc;
-            obj.Cyd = Cyd;
-            obj.Dyd_wd = Dyd_wd;
-            obj.Dyd_ud = Dyd_ud;
+            obj.Cyf = Cyf;
+            obj.Dyf_wc = Dyf_wc;
+            obj.Dyf_uf = Dyf_uf;
+            obj.Cyj = Cyj;
+            obj.Dyj_wd = Dyj_wd;
+            obj.Dyj_uj = Dyj_uj;
 
             % Set Loop to "Open"
             obj.Loop = 'Open';
@@ -180,26 +180,26 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
         %% Dimensions
         % When OpenLoopJumpFlowSystem.nuc is called it is calculated based on the
         % Buc property
-        function nuc = get.nuc(OpenLoopJumpFlowSystem)
-            nuc = size(OpenLoopJumpFlowSystem.Buc, 2);
+        function nuc = get.nuf(OpenLoopJumpFlowSystem)
+            nuc = size(OpenLoopJumpFlowSystem.Buf, 2);
         end
 
         % When OpenLoopJumpFlowSystem.nud is called it is calculated based on the
         % Bud property
-        function nud = get.nud(OpenLoopJumpFlowSystem)
-            nud = size(OpenLoopJumpFlowSystem.Bud, 2);
+        function nud = get.nuj(OpenLoopJumpFlowSystem)
+            nud = size(OpenLoopJumpFlowSystem.Buj, 2);
         end
 
         % When OpenLoopJumpFlowSystem.nyc is called it is calculated based on the
         % Cyc property
-        function nyc = get.nyc(OpenLoopJumpFlowSystem)
-            nyc = size(OpenLoopJumpFlowSystem.Cyc, 1);
+        function nyc = get.nyf(OpenLoopJumpFlowSystem)
+            nyc = size(OpenLoopJumpFlowSystem.Cyf, 1);
         end
 
         % When OpenLoopJumpFlowSystem.nyd is called it is calculated based on the
         % Cydd property
-        function nyd = get.nyd(OpenLoopJumpFlowSystem)
-            nyd = size(OpenLoopJumpFlowSystem.Cyd, 1);
+        function nyd = get.nyj(OpenLoopJumpFlowSystem)
+            nyd = size(OpenLoopJumpFlowSystem.Cyj, 1);
         end
     
         % Check dimensions of every state-space matrix of the open-loop
@@ -215,10 +215,10 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             nwd = OLJFSystem.nwd;
             nzc = OLJFSystem.nzc;
             nzd = OLJFSystem.nzd;
-            nuc = OLJFSystem.nuc;
-            nud = OLJFSystem.nud;
-            nyc = OLJFSystem.nyc;
-            nyd = OLJFSystem.nyd;
+            nuc = OLJFSystem.nuf;
+            nud = OLJFSystem.nuj;
+            nyc = OLJFSystem.nyf;
+            nyd = OLJFSystem.nyj;
 
             % Check state dimension
             if nx ~= size(OLJFSystem.Ac, 2)
@@ -229,7 +229,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
                 error('The number of rows of "Bwc" does not match the state dimension');
             end
 
-            if nx ~= size(OLJFSystem.Buc, 1)
+            if nx ~= size(OLJFSystem.Buf, 1)
                 error('The number of rows of "Buc" does not match the state dimension');
             end
 
@@ -241,7 +241,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
                 error('The number of rows of "Bwd" does not match the state dimension');
             end
 
-            if nx ~= size(OLJFSystem.Bud, 1)
+            if nx ~= size(OLJFSystem.Buj, 1)
                 error('The number of rows of "Bud" does not match the state dimension');
             end
 
@@ -253,11 +253,11 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
                 error('The number of columns of "Czd" does not match the state dimension');
             end
 
-            if nx ~= size(OLJFSystem.Cyc, 2)
+            if nx ~= size(OLJFSystem.Cyf, 2)
                 error('The number of columns of "Cyc" does not match the state dimension');
             end
 
-            if nx ~= size(OLJFSystem.Cyd, 2)
+            if nx ~= size(OLJFSystem.Cyj, 2)
                 error('The number of columns of "Cyd" does not match the state dimension');
             end
 
@@ -266,7 +266,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
                 error('The number of columns of "Dzc_wc" does not match the amount of continuous-time disturbance channels');
             end
 
-            if nwc ~= size(OLJFSystem.Dyc_wc, 2)
+            if nwc ~= size(OLJFSystem.Dyf_wc, 2)
                 error('The number of columns of "Dyc_wc" does not match the amount of continuous-time disturbance channels');
             end
 
@@ -275,7 +275,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
                 error('The number of columns of "Dzd_wd" does not match the amount of continuous-time disturbance channels');
             end
 
-            if nwd ~= size(OLJFSystem.Dyd_wd, 2)
+            if nwd ~= size(OLJFSystem.Dyj_wd, 2)
                 error('The number of columns of "Dyd_wd" does not match the amount of continuous-time disturbance channels');
             end
 
@@ -284,7 +284,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
                 error('The number of rows of "Dzc_wc" does not match the amount of continuous-time performance channels');
             end
 
-            if nzc ~= size(OLJFSystem.Dzc_uc, 1)
+            if nzc ~= size(OLJFSystem.Dzc_uf, 1)
                 error('The number of rows of "Dzc_uc" does not match the amount of continuous-time performance channels');
             end
 
@@ -293,43 +293,43 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
                 error('The number of rows of "Dzd_wd" does not match the amount of discrete-time performance channels');
             end
 
-            if nzd ~= size(OLJFSystem.Dzd_ud, 1)
+            if nzd ~= size(OLJFSystem.Dzd_uj, 1)
                 error('The number of rows of "Dzd_ud" does not match the amount of discrete-time performance channels');
             end
 
             % Check continuous-time controller output
-            if nuc ~= size(OLJFSystem.Dzc_uc, 2)
+            if nuc ~= size(OLJFSystem.Dzc_uf, 2)
                 error('The number of columns of "Dzc_uc" does not match the continuous-time controller output dimension');
             end
 
-            if nuc ~= size(OLJFSystem.Dyc_uc, 2)
+            if nuc ~= size(OLJFSystem.Dyf_uf, 2)
                 error('The number of columns of "Dyc_uc" does not match the continuous-time controller output dimension');
             end
 
             % Check discrete-time controller output
-            if nud ~= size(OLJFSystem.Dzd_ud, 2)
+            if nud ~= size(OLJFSystem.Dzd_uj, 2)
                 error('The number of columns of "Dzd_ud" does not match the discrete-time controller output dimension');
             end
 
-            if nud ~= size(OLJFSystem.Dyd_ud, 2)
+            if nud ~= size(OLJFSystem.Dyj_uj, 2)
                 error('The number of columns of "Dyd_ud" does not match the discrete-time controller output dimension');
             end
 
             % Check continuous-time controller input
-            if nyc ~= size(OLJFSystem.Dyc_wc, 1)
+            if nyc ~= size(OLJFSystem.Dyf_wc, 1)
                 error('The number of rows of "Dyc_wc" does not match the continuous-time controller input dimension');
             end
 
-            if nyc ~= size(OLJFSystem.Dyc_uc, 1)
+            if nyc ~= size(OLJFSystem.Dyf_uf, 1)
                 error('The number of rows of "Dyc_uc" does not match the continuous-time controller input dimension');
             end
 
             % Check discrete-time controller input
-            if nyd ~= size(OLJFSystem.Dyd_wd, 1)
+            if nyd ~= size(OLJFSystem.Dyj_wd, 1)
                 error('The number of rows of "Dyd_wd" does not match the discrete-time controller input dimension');
             end
 
-            if nyd ~= size(OLJFSystem.Dyd_ud, 1)
+            if nyd ~= size(OLJFSystem.Dyj_uj, 1)
                 error('The number of rows of "Dyd_ud" does not match the discrete-time controller input dimension');
             end
         end
@@ -346,8 +346,8 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             end
 
             dimCheck(OLJFSystem);
-            objSD = OpenLoopSampledDataSystem(OLJFSystem.Ac, OLJFSystem.Bwc, OLJFSystem.Buc, OLJFSystem.Ad, OLJFSystem.Bwd, OLJFSystem.Bud, OLJFSystem.Czc, OLJFSystem.Dzc_wc, ...
-                                              OLJFSystem.Dzc_uc, OLJFSystem.Czd, OLJFSystem.Dzd_wd, OLJFSystem.Dzd_ud, OLJFSystem.Cyd, OLJFSystem.Dyd_wd, OLJFSystem.Dyd_ud);
+            objSD = OpenLoopSampledDataSystem(OLJFSystem.Ac, OLJFSystem.Bwc, OLJFSystem.Buf, OLJFSystem.Ad, OLJFSystem.Bwd, OLJFSystem.Buj, OLJFSystem.Czc, OLJFSystem.Dzc_wc, ...
+                                              OLJFSystem.Dzc_uf, OLJFSystem.Czd, OLJFSystem.Dzd_wd, OLJFSystem.Dzd_uj, OLJFSystem.Cyj, OLJFSystem.Dyj_wd, OLJFSystem.Dyj_uj);
             objSD = objSD.appendWeightingFilters(Wwc, Wwd, Wzc, Wzd);
 
             % Convert weighting filters which are possibly numeric or tf to
@@ -363,9 +363,9 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
             nx_zd = size(Wzd.A, 1);
 
             % Continuous-time controller input matrices
-            Cyc = [OLJFSystem.Cyc, OLJFSystem.Dyc_wc*Wwc.C, zeros(OLJFSystem.nyc, nx_wd+nx_zc+nx_zd)];
-            Dyc_wc = OLJFSystem.Dyc_wc*Wwc.D;
-            Dyc_uc = OLJFSystem.Dyc_uc;
+            Cyc = [OLJFSystem.Cyf, OLJFSystem.Dyf_wc*Wwc.C, zeros(OLJFSystem.nyf, nx_wd+nx_zc+nx_zd)];
+            Dyc_wc = OLJFSystem.Dyf_wc*Wwc.D;
+            Dyc_uc = OLJFSystem.Dyf_uf;
 
             % Construct OLJF object
             objJF = OpenLoopJumpFlowSystem(objSD.Ac, objSD.Bwc, objSD.Buc, objSD.Ad, objSD.Bwd, objSD.Bud, objSD.Czc, objSD.Dzc_wc, objSD.Dzc_uc, objSD.Czd, objSD.Dzd_wd, objSD.Dzd_ud, ...
@@ -374,7 +374,7 @@ classdef OpenLoopJumpFlowSystem < JumpFlowSystem
     end
     methods (Access = protected)
         function propgrp = getPropertyGroups(~)
-            proplist = {'Ac', 'Bwc', 'Buc', 'Ad', 'Bwd', 'Bud', 'Czc', 'Dzc_wc', 'Dzc_uc', 'Czd', 'Dzd_wd', 'Dzd_ud', 'Cyc','Dyc_wc', 'Dyc_uc', 'Cyd','Dyd_wd', 'Dyd_ud'};
+            proplist = {'Ac', 'Bwc', 'Buf', 'Ad', 'Bwd', 'Buj', 'Czc', 'Dzc_wc', 'Dzc_uf', 'Czd', 'Dzd_wd', 'Dzd_uj', 'Cyf','Dyf_wc', 'Dyf_uf', 'Cyj','Dyj_wd', 'Dyj_uj'};
             propgrp = matlab.mixin.util.PropertyGroup(proplist);
         end
     end

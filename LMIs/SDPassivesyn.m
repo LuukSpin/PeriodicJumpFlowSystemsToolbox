@@ -41,8 +41,8 @@ sdpVariables.Upsilon = Upsilon;
 sdpVariables.Omega = Omega;
 
 % Fill the H-infinity LMI
-[HinfLMIMatrix, A_bar] = fillPassiveLMI(OpenLoopSDSystem, sdpVariables, opts);
-HinfLMI = HinfLMIMatrix >= numAcc*eye(size(HinfLMIMatrix));
+[HPassLMIMatrix, A_bar] = fillPassiveLMI(OpenLoopSDSystem, sdpVariables, opts);
+HinfLMI = HPassLMIMatrix >= numAcc*eye(size(HPassLMIMatrix));
 
 % Add a constraint
 constraint = [sdpVariables.Y, eye(nx, nc); eye(nc, nx), sdpVariables.X] >= numAcc*eye(size(blkdiag(sdpVariables.Y, sdpVariables.X)));
