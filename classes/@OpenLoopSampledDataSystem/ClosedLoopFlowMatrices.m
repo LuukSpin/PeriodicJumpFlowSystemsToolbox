@@ -25,7 +25,7 @@ function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLSDSystem, opts, nc)
 
 arguments
     OLSDSystem      (1,1) OpenLoopSampledDataSystem
-    opts            (1,1) SDopts
+    opts            (1,1) jfopt
     nc              (1,1) double = OLSDSystem.nx
 end
 

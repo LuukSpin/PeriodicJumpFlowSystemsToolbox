@@ -1,7 +1,4 @@
 function SDSystem = uminus(objSD)
-arguments
-    objSD (1,1) OpenLoopSampledDataSystem
-end
 
 Ac = objSD.Ac;
 Bwc = objSD.Bwc;

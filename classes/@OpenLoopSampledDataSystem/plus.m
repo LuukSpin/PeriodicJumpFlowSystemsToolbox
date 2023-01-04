@@ -1,8 +1,4 @@
 function SDSystem = plus(objSD1, objSD2)
-arguments
-    objSD1 (1,1) OpenLoopSampledDataSystem
-    objSD2 (1,1) OpenLoopSampledDataSystem
-end
 
 Ac = blkdiag(objSD1.Ac, objSD2.Ac);
 Bwc = [objSD1.Bwc; objSD2.Bwc];

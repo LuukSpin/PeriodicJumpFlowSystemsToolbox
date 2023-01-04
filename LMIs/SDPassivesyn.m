@@ -5,7 +5,7 @@ function [Controller, PassiveFlag, CLJFSystem] = SDPassivesyn(OpenLoopSDSystem, 
 
 arguments
     OpenLoopSDSystem    (1,1) OpenLoopSampledDataSystem
-    opts                (1,1) SDopts
+    opts                (1,1) jfopt
 end
 
 dimCheck(OpenLoopSDSystem);
@@ -47,14 +47,7 @@ HinfLMI = HPassLMIMatrix >= numAcc*eye(size(HPassLMIMatrix));
 % Add a constraint
 constraint = [sdpVariables.Y, eye(nx, nc); eye(nc, nx), sdpVariables.X] >= numAcc*eye(size(blkdiag(sdpVariables.Y, sdpVariables.X)));
 
-if strcmpi(opts.LMI.schurController, 'yes')
-    schurControllerLMI = [sdpVariables.Y, eye(size(sdpVariables.Y)); eye(size(sdpVariables.Y)), numAcc*10*eye(size(sdpVariables.Y))] >= -1e3*numAcc*eye(size(sdpVariables.Y)*2);
-    LMI = [HinfLMI, constraint, schurControllerLMI];
-else
-    LMI = [HinfLMI, constraint];
-end
-
-diagnostics = optimize(LMI, [], opts.LMI.solverOptions);
+diagnostics = optimize(HinfLMI+constraint, [], opts.LMI.solverOptions);
 
 % Determine if bisection-based search was succesful
 if diagnostics.problem == 0

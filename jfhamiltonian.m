@@ -50,9 +50,9 @@ M1 = Cc'*Rc*Cc;
 M2 = Qc+Sc*Dc + Dc'*Sc'+Dc'*Rc*Dc;
 M3 = Cc'*(Sc'+Rc*Dc);
 
-H11 = Ac-Bc\M2*M3';
-H12 = Bc\M2*Bc';
-H21 = M1-M3\M2*M3';
+H11 = Ac-Bc/M2*M3';
+H12 = Bc/M2*Bc';
+H21 = M1-M3/M2*M3';
 
 H = [H11, H12; H21, -H11'];
 

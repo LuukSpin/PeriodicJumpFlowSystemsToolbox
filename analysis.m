@@ -2,22 +2,26 @@ function normValue = analysis(sys, opts)
 
 arguments
     sys              {mustBeDynamicalSystem(sys)}
-    opts             (1,1) jfopt
+    opts             jfopt
+end
+
+if isa(sys, 'InputOutputModel')
+    if sys.Ts ~= 0
+        sys = dt2jf(sys);
+    else
+        sys = ct2jf(sys);
+    end
+elseif isa(sys, 'OpenLoopSampledDataSystem')
+    sys = sd2jf(sys);
+elseif isa(sys, 'OpenLoopJumpFlowSystem')
+    sys = jf2jf(sys);
 end
 
 % Check stability
-if isa(sys, 'JumpFlowSystem')
-    if ~sys.isstable(opts)
-        warning('The system is not stable and hence does not have a finite norm of any kind.');
-        normValue = nan;
-        return
-    end
-else
-    if ~isstable(sys)
-        warning('The system is not stable and hence does not have a finite norm of any kind.');
-        normValue = nan;
-        return
-    end
+if ~sys.isstable(opts)
+    warning('The system is not stable and hence does not have a finite norm of any kind.');
+    normValue = nan;
+    return
 end
 
 % Check all specified system norms such as Hinf, H2, H2g, L1

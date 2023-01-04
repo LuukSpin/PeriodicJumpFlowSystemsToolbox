@@ -1,9 +1,8 @@
-function [Controller, synthesisNormValue, CLJFSystem] = synthesis(Plant, performanceIndicator, opts)
+function [Controller, synthesisNormValue, CLJFSystem] = synthesis(Plant, opts)
 
 arguments
     Plant                   (1,1) {mustBeA(Plant, ["JumpFlowSystem", "OpenLoopSampledDataSystem", "OpenLoopJumpFlowSystem"])}
-    performanceIndicator    (1,1) char
-    opts                    (1,1) SDopts
+    opts                    (1,1) jfopt
 end
 
 % Check if the jump-flow system is a generalized plant (check
@@ -17,7 +16,7 @@ if strcmpi(Plant.reconstructor, 'unspecified')
 end
 
 % Check all specified system norms such as Hinf, H2, H2g, L1
-switch performanceIndicator
+switch opts.performanceString
     case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
         [Controller, synthesisNormValue, CLJFSystem] = SDHinfsyn(Plant, opts);
     case {'H2', 'h2'}

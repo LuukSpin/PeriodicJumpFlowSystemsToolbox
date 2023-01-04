@@ -1,7 +1,7 @@
 function objSD_reconstructed = applyReconstructor(objSD, opts)
 arguments
-    objSD   (1,1) OpenLoopSampledDataSystem
-    opts    (1,1) SDopts = SDopts(1)
+    objSD   OpenLoopSampledDataSystem
+    opts    (1,1) jfopt
 end
 
 if strcmpi(objSD.reconstructor, 'unspecified')

@@ -6,10 +6,6 @@ function SDSystem = mtimes(obj1, obj2)
 %   diagram:
 %
 %
-arguments
-    obj1 (1,1) OpenLoopSampledDataSystem
-    obj2 (1,1) OpenLoopSampledDataSystem
-end
 
 nx1 = obj2.nx;
 nx2 = obj1.nx;

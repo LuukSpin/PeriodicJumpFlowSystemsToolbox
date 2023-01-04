@@ -7,9 +7,9 @@ function objJF = lft(OLSDSystem1, OLSDSystem2, opts)
 %
 
 arguments
-    OLSDSystem1         (1,1) OpenLoopSampledDataSystem
+    OLSDSystem1         OpenLoopSampledDataSystem
     OLSDSystem2         {mustBeNumericOrListedType(OLSDSystem2, "ss", "tf", "OpenLoopSampledDataSystem")}
-    opts                (1,1) SDopts
+    opts                (1,1) jfopt
 end
 
 if strcmpi(OLSDSystem1.reconstructor, 'unspecified')
@@ -20,7 +20,8 @@ end
 % OLSDSystem
 if ~isa(OLSDSystem2, 'OpenLoopSampledDataSystem')
     OLSDSystem2 = ss(OLSDSystem2);
-    OLSDSystem2 = makeSDFromDiscreteController(OLSDSystem2, opts);
+    [p, m] = size( OLSDSystem2);
+    OLSDSystem2 = dt2sd(OLSDSystem2, p, m);
 else
     if strcmpi(OLSDSystem2.reconstructor, 'unspecified')
         OLSDSystem2 = applyReconstructor(OLSDSystem2, opts);

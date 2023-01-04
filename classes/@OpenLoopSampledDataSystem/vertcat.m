@@ -1,8 +1,4 @@
 function SDSystem = vertcat(obj1, obj2)
-arguments
-    obj1 (1,1) OpenLoopSampledDataSystem
-    obj2 (1,1) OpenLoopSampledDataSystem
-end
 
 Ac = blkdiag(obj1.Ac, obj2.Ac);
 Bwc = [obj1.Bwc; obj2.Bwc];

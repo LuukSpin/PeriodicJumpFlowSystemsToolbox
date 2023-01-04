@@ -290,6 +290,9 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         % Override the isempty operator for OpenLoopSampledDataSystem class object
         flag = isempty(objSD)
 
+        % Override the size operator for OpenLoopSampledDataSystem class object
+        [nx, nwc, nzc, nwd, nzd, nu, ny] = size(objSD);
+
         %% Sampled-data specific methods
         % Add weighting filters to the disturbance and performance channels
         weightedSD = appendWeightingFilters(objSD, Vc, Vd, Wc, Wd)
