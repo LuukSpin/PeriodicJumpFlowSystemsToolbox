@@ -307,15 +307,10 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         % reconstructor is applied to the controller output
         fobjSD_reconstructed = applyReconstructor(objSD, opts)
 
-        % Perform analysis for various system gains and norms
-        normValue = analysis(OLSDSystem, performanceIndicator, opts)
-
         % Determine closed-loop flow matrices based an open-loop sampled-data
         % system
         [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLSDSystem, opts, nc)
 
-        % Perform synthesis for various system gains and norms
-        [Controller, synthesisNormValue, CLJFSystem] = synthesis(OLSDSystem, performanceIndicator, opts)
     end
     methods (Access = protected)
         function propgrp = getPropertyGroups(~)

@@ -1,16 +1,16 @@
-function [H, M2] = jfhamiltonian(jfsys, opts)
+function [H, M2] = jfhamiltonian(sys, opts)
 
 arguments
-    jfsys       (1,1) JumpFlowSystem
-    opts        (1,1) jfopt
+    sys         {mustBeA(sys, ["JumpFlowSystem", "OpenLoopSampledDataSystem"])}
+    opts        jfopt
 end
 
 % Check all specified system norms such as Hinf, H2, H2g, L1
 switch lower(opts.performanceString)
     case {'hinf', 'l2', 'h-inf'}
-        Qc = opts.performanceValue*eye(jfsys.nwc);
-        Sc = zeros(jfsys.nwc, jfsys.nzc);
-        Rc = -opts.performanceValue\eye(jfsys.nzc);
+        Qc = opts.performanceValue*eye(sys.nwc);
+        Sc = zeros(sys.nwc, sys.nzc);
+        Rc = -opts.performanceValue\eye(sys.nzc);
     case {'h2'}
         error('H2-norm is not yet implemented');
     case {'h2g'}
@@ -18,9 +18,9 @@ switch lower(opts.performanceString)
     case {'l1'}
         error('L1-norm is not yet implemented');
     case {'passivity', 'passive', 'pass'}
-        Qc = zeros(jfsys.nwc);
-        Sc = -eye(jfsys.nwc, jfsys.nzc)/2;
-        Rc = zeros(jfsys.nzc);
+        Qc = zeros(sys.nwc);
+        Sc = -eye(sys.nwc, sys.nzc)/2;
+        Rc = zeros(sys.nzc);
     case {'qrs', 'quad', 'quadratic'}
         Qc = opts.performanceValue.Qc;
         if ~all(Qc==Qc', 'all')
@@ -41,10 +41,14 @@ switch lower(opts.performanceString)
         end
 end
 
-Ac = jfsys.Ac;
-Bc = jfsys.Bwc;
-Cc = jfsys.Czc;
-Dc = jfsys.Dzc_wc;
+if isa(sys, 'OpenLoopSampledDataSystem')
+    [Ac, Bc, Cc, Dc] = ClosedLoopFlowMatrices(sys, opts);
+else
+    Ac = sys.Ac;
+    Bc = sys.Bwc;
+    Cc = sys.Czc;
+    Dc = sys.Dzc_wc;
+end
 
 M1 = Cc'*Rc*Cc;
 M2 = Qc+Sc*Dc + Dc'*Sc'+Dc'*Rc*Dc;

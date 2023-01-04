@@ -1,4 +1,4 @@
-function LMI = fillAnalysisLMI(sys, opts)
+function LMI = fillDissAnalysisLMI(sys, opts)
 
 arguments
     sys       (1,1) {mustBeA(sys, ["JumpFlowSystem", "ss", "zpk", "tf"])}

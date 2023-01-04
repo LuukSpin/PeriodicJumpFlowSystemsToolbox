@@ -1,4 +1,4 @@
-function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLSDSystem, opts, nc)
+function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(sys, opts, nc)
 %CLOSEDLOOPFLOWMATRICES calculates closed-loop continuous-time flow matrices (Ac, Bwc,
 %Czc, Dzc_wc) from an open-loop sampled-data system.
 %
@@ -24,22 +24,22 @@ function [Ac, Bwc, Czc, Dzc_wc] = ClosedLoopFlowMatrices(OLSDSystem, opts, nc)
 %   z_d  = Cd*\zi + Dd*w_d
 
 arguments
-    OLSDSystem      (1,1) OpenLoopSampledDataSystem
-    opts            (1,1) jfopt
-    nc              (1,1) double = OLSDSystem.nx
+    sys             OpenLoopSampledDataSystem
+    opts            jfopt
+    nc              double = sys.nx
 end
 
-if strcmpi(OLSDSystem.reconstructor, 'unspecified')
-    OLSDSystem = applyReconstructor(OLSDSystem, opts);
-    nc = nc+OLSDSystem.nu;
+if strcmpi(sys.reconstructor, 'unspecified')
+    sys = applyReconstructor(sys, opts);
+    nc = nc+sys.nu;
 end
 
 % Dimensions
-nwc = OLSDSystem.nwc;
-nzc = OLSDSystem.nzc;
+nwc = sys.nwc;
+nzc = sys.nzc;
 
-Ac = blkdiag(OLSDSystem.Ac, zeros(nc));
-Bwc = [OLSDSystem.Bwc; zeros(nc, nwc)];
-Czc = [OLSDSystem.Czc, zeros(nzc, nc)];
-Dzc_wc = OLSDSystem.Dzc_wc;
+Ac = blkdiag(sys.Ac, zeros(nc));
+Bwc = [sys.Bwc; zeros(nc, nwc)];
+Czc = [sys.Czc, zeros(nzc, nc)];
+Dzc_wc = sys.Dzc_wc;
 end

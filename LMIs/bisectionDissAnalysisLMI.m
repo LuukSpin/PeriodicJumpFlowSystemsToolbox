@@ -1,7 +1,7 @@
-function gamma = bisectionAnalysisLMI(jfsys, opts)
+function gamma = bisectionDissAnalysisLMI(jfsys, opts)
 arguments
-    jfsys   (1,1) JumpFlowSystem
-    opts    (1,1) jfopt
+    jfsys   JumpFlowSystem
+    opts    jfopt
 end
 
 % Bisection settings
@@ -35,7 +35,7 @@ while N < Nmax
         opts.performanceValue = mean(a);
 
         % Fill the H-infinity LMI
-        LMI = fillAnalysisLMI(jfsys, opts);
+        LMI = fillDissAnalysisLMI(jfsys, opts);
 
         rng shuffle;
         diagnostics = optimize(LMI, [], opts.LMI.solverOptions);

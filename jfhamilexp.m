@@ -1,18 +1,18 @@
-function [A_hat, B_hat, C_hat] = jfhamilexp(jfsys, opts)
+function [A_hat, B_hat, C_hat] = jfhamilexp(sys, opts)
 
 arguments
-    jfsys       (1,1) JumpFlowSystem
-    opts        (1,1) jfopt
+    sys         {mustBeA(sys, ["JumpFlowSystem", "OpenLoopSampledDataSystem"])}
+    opts        jfopt
 end
 
-[H, M2] = jfhamiltonian(jfsys, opts);
+[H, M2] = jfhamiltonian(sys, opts);
 if any(real(eig(M2))<=0)
     error('The conditition M2>0 should be satisfied in order for the lyapunov matrix to be a solution to the associated differential riccati equation');
 end
 
 F = expm(-H*opts.simulation.SampleTime);
 
-nx = jfsys.nx;
+nx = sys.nx;
 
 F11 = F(1:nx, 1:nx);
 F12 = F(1:nx, nx+1:end);

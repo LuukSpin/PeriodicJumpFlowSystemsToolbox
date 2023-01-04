@@ -1,8 +1,8 @@
 function [Controller, synthesisNormValue, CLJFSystem] = synthesis(Plant, opts)
 
 arguments
-    Plant                   (1,1) {mustBeA(Plant, ["JumpFlowSystem", "OpenLoopSampledDataSystem", "OpenLoopJumpFlowSystem"])}
-    opts                    (1,1) jfopt
+    Plant     {mustBeA(Plant, ["OpenLoopSampledDataSystem", "OpenLoopJumpFlowSystem"])}
+    opts      jfopt
 end
 
 % Check if the jump-flow system is a generalized plant (check
@@ -16,27 +16,27 @@ if strcmpi(Plant.reconstructor, 'unspecified')
 end
 
 % Check all specified system norms such as Hinf, H2, H2g, L1
-switch opts.performanceString
-    case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
+switch lower(opts.performanceString)
+    case {'hinf', 'l2', 'h00', 'hoo'}
         [Controller, synthesisNormValue, CLJFSystem] = SDHinfsyn(Plant, opts);
-    case {'H2', 'h2'}
+    case {'h2'}
         warning('The H2 norm has yet to be implemented in the jump-flow systems toolbox');
         Controller = 0;
         synthesisNormValue = nan;
         CLJFSystem = JumpFlowSystem();
-    case {'H2g', 'h2g', 'genH2', 'genh2', 'GenH2', 'Genh2'}
+    case {'h2g', 'genh2'}
         warning('The generalized H2 norm has yet to be implemented in the jump-flow systems toolbox');
         Controller = 0;
         synthesisNormValue = nan;
         CLJFSystem = JumpFlowSystem();
-    case {'L1', 'l1'}
+    case {'l1'}
         warning('The L1 norm has yet to be implemented in the jump-flow systems toolbox');
         Controller = 0;
         synthesisNormValue = nan;
         CLJFSystem = JumpFlowSystem();
-    case {'Passivity', 'passivity', 'Passive', 'passive', 'Pass', 'pass'}
+    case {'passivity', 'passive', 'pass'}
         [Controller, synthesisNormValue, CLJFSystem] = SDPassivesyn(Plant, opts);
-    case {'QRS', 'Quad', 'Quadratic', 'qrs', 'quad', 'quadratic'}
+    case {'qrs', 'quad', 'quadratic'}
         warning('Controller synthesis based on quadratic dissipativity is not yet implemented in the jump-flow systems toolbox');
         Controller = 0;
         synthesisNormValue = nan;

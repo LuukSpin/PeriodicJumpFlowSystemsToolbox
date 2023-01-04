@@ -413,9 +413,6 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
         % Stabilizability function
         function stabilizabilityFlag = isstabilizable(objJF, opts)
         end
-
-        % Perform analysis for various system gains and norms
-        normValue = analysis(CLJFSystem, performanceIndicator, opts)
     end
 
     methods (Access = protected)
