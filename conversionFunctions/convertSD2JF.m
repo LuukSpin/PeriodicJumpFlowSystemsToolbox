@@ -5,7 +5,7 @@ function objJF = convertSD2JF(objSD, optsSD)
 
 arguments
     objSD (1,1) {mustBeA(objSD, ["SampledDataSystem", "OpenLoopSampledDataSystem"])}
-    optsSD (1,1) SDopts = SDopts();
+    optsSD (1,1) SDopts = SDopts(1);
 end
 
 % Check whether the sampled-data object is in open-loop

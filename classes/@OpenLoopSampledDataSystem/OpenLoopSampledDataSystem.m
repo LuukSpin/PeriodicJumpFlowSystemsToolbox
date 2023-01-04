@@ -287,6 +287,9 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         % Override the vertcat operator for OpenLoopSampledDataSystem class object
         SDSystem = vertcat(obj1, obj2)
 
+        % Override the isempty operator for OpenLoopSampledDataSystem class object
+        flag = isempty(objSD)
+
         %% Sampled-data specific methods
         % Add weighting filters to the disturbance and performance channels
         weightedSD = appendWeightingFilters(objSD, Vc, Vd, Wc, Wd)

@@ -361,11 +361,12 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
         end
 
         %% System theoretic properties
+
         % Stability function
         function stabilityFlag = isstable(objJF, opts)
             arguments
                 objJF   (1,1) JumpFlowSystem
-                opts    (1,1) SDopts
+                opts    (1,1) jfopt
             end
             h = opts.simulation.SampleTime;
             stabilityFlag = all(abs(eig(expm(objJF.Ac*h)*objJF.Ad)) < 1);
@@ -375,7 +376,7 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
         function reachabilityFlag = isreachable(objJF, opts)
             arguments
                 objJF   (1,1) JumpFlowSystem
-                opts    (1,1) SDopts
+                opts    (1,1) jfopt
             end
 
             Ac = objJF.Ac;
@@ -414,42 +415,7 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
         end
 
         % Perform analysis for various system gains and norms
-        function normValue = analysis(CLJFSystem, performanceIndicator, opts)
-
-            arguments
-                CLJFSystem              (1,1) JumpFlowSystem
-                performanceIndicator    (1,1) string
-                opts                    (1,1) SDopts
-            end
-
-            % Check stability
-            if ~CLJFSystem.isstable(opts)
-                warning('The system is not stable and hence does not have a finite norm of any kind.');
-                normValue = nan;
-                return
-            end
-
-            % Check all specified system norms such as Hinf, H2, H2g, L1
-            switch performanceIndicator
-                case {'Hinf', 'L2', 'H-inf', 'hinf', 'l2', 'h-inf'}
-                    normValue = JFHinfAnalysis(CLJFSystem, opts);
-                case {'H2', 'h2'}
-                    warning('The H2 norm has yet to be implemented in the sampled-data toolbox');
-                    normValue = nan;
-                case {'H2g', 'h2g'}
-                    warning('The generalized H2 norm has yet to be implemented in the sampled-data toolbox');
-                    normValue = nan;
-                case {'L1', 'l1'}
-                    warning('The L1 norm has yet to be implemented in the sampled-data toolbox');
-                    normValue = nan;
-                case {'Passivity', 'passivity', 'Passive', 'passive', 'Pass', 'pass'}
-                    normValue = JFPassiveAnalysis(CLJFSystem, opts);
-                case {'QRS', 'Quad', 'Quadratic', 'qrs', 'quad', 'quadratic'}
-                    warning('Controller synthesis based on quadratic dissipativty is not yet implemented in the sampled-data toolbox');
-                otherwise
-                    error('The chosen performance indicator string is not a valid choice as it does not represent a system norm or gain.');
-            end
-        end
+        normValue = analysis(CLJFSystem, performanceIndicator, opts)
     end
 
     methods (Access = protected)

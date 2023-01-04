@@ -37,8 +37,9 @@ alpha = sdpvar(1,1);
 NumericalConstraint1 = (sdpVariableStruct.X - alpha*eye(size(sdpVariableStruct.X)) <= -numAcc*eye(size(sdpVariableStruct.X)));
 NumericalConstraint2 = (sdpVariableStruct.Y - alpha*eye(size(sdpVariableStruct.Y)) <= -numAcc*eye(size(sdpVariableStruct.Y)));
 ParamBlock = [sdpVariableStruct.Gamma, sdpVariableStruct.Theta; sdpVariableStruct.Upsilon, sdpVariableStruct.Omega];
-alphaBlock = alpha*eye(size(ParamBlock));
-NumericalConstraint3 = [alphaBlock, ParamBlock; ParamBlock', alphaBlock] >= numAcc*eye(size(blkdiag(alphaBlock, alphaBlock)));
+alphaBlock1 = alpha*eye(size(ParamBlock, 1));
+alphaBlock2 = alpha*eye(size(ParamBlock, 2));
+NumericalConstraint3 = [alphaBlock1, ParamBlock; ParamBlock', alphaBlock2] >= numAcc*eye(size(blkdiag(alphaBlock1, alphaBlock2)));
 
 NumericalConstraints = [NumericalConstraint1, NumericalConstraint2, NumericalConstraint3];
 

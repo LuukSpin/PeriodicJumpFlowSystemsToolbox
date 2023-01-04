@@ -40,7 +40,7 @@ a_init = max(norm(OpenLoopSDSystem.Dzc_wc, 2));
 if a_init == 0
     a = [tol 2];
 else
-    a = [a_init 2];
+    a = [a_init max(2, 2*a_init)];
 end
 
 N = 0;
