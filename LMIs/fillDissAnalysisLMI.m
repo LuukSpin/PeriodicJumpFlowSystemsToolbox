@@ -16,12 +16,8 @@ switch lower(opts.performanceString)
         Qd = opts.performanceValue*eye(sys.nwd);
         Sd = zeros(sys.nwd, sys.nzd);
         Rd = -opts.performanceValue\eye(sys.nzd);
-    case {'h2'}
-        error('H2-norm is not yet implemented');
     case {'h2g'}
         error('genH2-norm is not yet implemented');
-    case {'l1'}
-        error('L1-norm is not yet implemented');
     case {'passivity', 'passive', 'pass'}
         Qd = zeros(sys.nwd);
         Sd = -eye(sys.nwd, sys.nzd)/2;

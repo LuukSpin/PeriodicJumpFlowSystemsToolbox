@@ -4,8 +4,8 @@ function [Controller, gamma, CLJFSystem] = SDHinfsyn(OpenLoopSDSystem, opts)
 %
 
 arguments
-    OpenLoopSDSystem    (1,1) OpenLoopSampledDataSystem
-    opts                (1,1) SDopts
+    OpenLoopSDSystem    OpenLoopSampledDataSystem
+    opts                jfopt
 end
 
 dimCheck(OpenLoopSDSystem);
@@ -31,6 +31,14 @@ Theta = sdpvar(nx, ny, 'full');
 Upsilon = sdpvar(nu, nc, 'full');
 Omega = sdpvar(nu, ny, 'full');
 
+% LMI variables
+sdpVariables.Y = Y;
+sdpVariables.X = X;
+sdpVariables.Gamma = Gamma;
+sdpVariables.Theta = Theta;
+sdpVariables.Upsilon = Upsilon;
+sdpVariables.Omega = Omega;
+
 % Bisection settings
 Nmax = 100; %Maximum numbers of iterations
 tol = 1e-4; %Tolerance to calculate upperbound of Hinf norm
@@ -55,14 +63,6 @@ while N < Nmax
     if ~xor((a(2) - a(1)) > tol, N < Nmax-1) || last
         gamma = mean(a);
 
-        % LMI variables
-        sdpVariables.Y = Y;
-        sdpVariables.X = X;
-        sdpVariables.Gamma = Gamma;
-        sdpVariables.Theta = Theta;
-        sdpVariables.Upsilon = Upsilon;
-        sdpVariables.Omega = Omega;
-
         % Fill the H-infinity LMI
         [HinfLMIMatrix, A_bar] = fillHinfLMI(OpenLoopSDSystem, sdpVariables, opts, gamma);
         HinfLMI = HinfLMIMatrix >= numAcc*eye(size(HinfLMIMatrix));
@@ -70,12 +70,7 @@ while N < Nmax
         % Add a constraint
         constraint = [sdpVariables.Y, eye(nx, nc); eye(nc, nx), sdpVariables.X] >= numAcc*eye(size(blkdiag(sdpVariables.Y, sdpVariables.X)));
 
-        if strcmpi(opts.LMI.schurController, 'yes')
-            schurControllerLMI = [sdpVariables.Y, eye(size(sdpVariables.Y)); eye(size(sdpVariables.Y)), numAcc*10*eye(size(sdpVariables.Y))] >= -1e3*numAcc*eye(size(sdpVariables.Y)*2);
-            LMI = [HinfLMI, constraint, schurControllerLMI];
-        else
-            LMI = [HinfLMI, constraint];
-        end
+        LMI = [HinfLMI, constraint];
 
         rng(1);
         diagnostics = optimize(LMI, [], opts.LMI.solverOptions);
@@ -113,34 +108,34 @@ end
 
 Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariables, h);
 
-K_zpk = zpk(Controller);
-K_zeros = K_zpk.z{:};
-K_poles = K_zpk.p{:};
-
-nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
-nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
-
-if strcmpi(opts.LMI.controllerConditioning, 'yes') || (nrUnstabPole+nrNonMinPhaseZero>0)
-    [sdpVariables, A_bar] = controllerConditioning(OpenLoopSDSystem, sdpVariables, opts, 'Hinf', gamma);
-    
-    if (nrUnstabPole+nrNonMinPhaseZero>0) && ~strcmpi(opts.LMI.controllerConditioning, 'yes')
-        warning('Controller conditioning is applied even though this was not specified in "opts.LMI.controllerConditioning". This is done in order to reduce poles and zeros outside of the unit circle.');
-    end
-
-    Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariables, opts);
-
-    K_zpk = zpk(Controller);
-    K_zeros = K_zpk.z{:};
-    K_poles = K_zpk.p{:};
-
-    nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
-    nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
-
-end
-
-if nrUnstabPole+nrNonMinPhaseZero>0
-    sprintf('The synthesized controller contains %d no. of unstable poles and %d no. of non-minimum phase zeros.', nrUnstabPole, nrNonMinPhaseZero);
-end
+% K_zpk = zpk(Controller);
+% K_zeros = K_zpk.z{:};
+% K_poles = K_zpk.p{:};
+% 
+% nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
+% nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
+% 
+% if strcmpi(opts.LMI.controllerConditioning, 'yes') || (nrUnstabPole+nrNonMinPhaseZero>0)
+%     [sdpVariables, A_bar] = controllerConditioning(OpenLoopSDSystem, sdpVariables, opts, 'Hinf', gamma);
+%     
+%     if (nrUnstabPole+nrNonMinPhaseZero>0) && ~strcmpi(opts.LMI.controllerConditioning, 'yes')
+%         warning('Controller conditioning is applied even though this was not specified in "opts.LMI.controllerConditioning". This is done in order to reduce poles and zeros outside of the unit circle.');
+%     end
+% 
+%     Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariables, opts);
+% 
+%     K_zpk = zpk(Controller);
+%     K_zeros = K_zpk.z{:};
+%     K_poles = K_zpk.p{:};
+% 
+%     nrUnstabPole = length(K_poles(abs(K_poles)>1+eps));
+%     nrNonMinPhaseZero = length(K_zeros(abs(K_zeros)>1+eps));
+% 
+% end
+% 
+% if nrUnstabPole+nrNonMinPhaseZero>0
+%     sprintf('The synthesized controller contains %d no. of unstable poles and %d no. of non-minimum phase zeros.', nrUnstabPole, nrNonMinPhaseZero);
+% end
 
 CLJFSystem = OpenLoopSDSystem.lft(Controller, opts);
 

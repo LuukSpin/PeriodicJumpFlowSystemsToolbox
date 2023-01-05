@@ -1,21 +1,23 @@
-function Controller = controllerConstruction(OpenLoopSDSystem, A_bar, sdpVariableStruct, opts)
+function Controller = controllerConstruction(OpenLoopSDSystem, sdpVariableStruct, opts)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
 arguments
-    OpenLoopSDSystem        (1,1) OpenLoopSampledDataSystem
-    A_bar                   double
+    OpenLoopSDSystem        OpenLoopSampledDataSystem
     sdpVariableStruct       struct
-    opts                    (1,1) SDopts
+    opts                    jfopt
 end
 
 % Dimensions
+nx = OpenLoopSDSystem.nx;
 ny = OpenLoopSDSystem.ny;
 nu = OpenLoopSDSystem.nu;
 nc = size(sdpVariableStruct.X, 1);
 
 % Sampled-data system matrices
+A_hat = jfhamilexp(OpenLoopSDSystem, opts);
+A_bar = A_hat(1:nx, 1:nx);
 Ad = OpenLoopSDSystem.Ad;
 Bud = OpenLoopSDSystem.Bud;
 Cy = OpenLoopSDSystem.Cy;

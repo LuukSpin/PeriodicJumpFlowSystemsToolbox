@@ -1,6 +1,6 @@
 function weightedSD = appendWeightingFilters(objSD, Vc, Vd, Wc, Wd)
 arguments
-    objSD  (1,1) OpenLoopSampledDataSystem
+    objSD      OpenLoopSampledDataSystem
     Vc         {mustBeNumericOrListedType(Vc, "ss", "tf")} = 1
     Vd         {mustBeNumericOrListedType(Vd, "ss", "tf")} = 1
     Wc         {mustBeNumericOrListedType(Wc, "ss", "tf")} = 1

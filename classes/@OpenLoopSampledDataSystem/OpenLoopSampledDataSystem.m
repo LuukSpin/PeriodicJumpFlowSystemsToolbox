@@ -161,7 +161,7 @@ classdef OpenLoopSampledDataSystem < JumpFlowSystem
         % sampled-data system
         function dimCheck(OLSDSystem)
             arguments
-                OLSDSystem (1,1) OpenLoopSampledDataSystem
+                OLSDSystem OpenLoopSampledDataSystem
             end
 
             % Define dimensions

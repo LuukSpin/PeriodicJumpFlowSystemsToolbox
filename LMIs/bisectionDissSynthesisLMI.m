@@ -1,4 +1,4 @@
-function gamma = bisectionDissSynthesisLMI(sys, opts)
+function synVars = bisectionDissSynthesisLMI(sys, opts)
 arguments
     sys     OpenLoopSampledDataSystem
     opts    jfopt
@@ -7,6 +7,7 @@ end
 % Bisection settings
 Nmax = opts.LMI.bisection.maxIter; %Maximum numbers of iterations of the bisection search
 tol = opts.LMI.bisection.tol; %Tolerance to calculate upperbound of Hinf norm
+numAcc = opts.LMI.numericalAccuracy;
 
 % Initialization
 a_init = max(norm(sys.Dzc_wc, 2), norm(sys.Dzd_wd, 2));
@@ -20,10 +21,20 @@ N = 0;
 last = 0;
 initialfeas = 0;
 
-% Stability check
-if ~isstable(sys, opts)
-    error('System is not stable and hence does not have a finite Hinf norm');
-end
+% LMI variables
+Y = sdpvar(nx, nx, 'symmetric');
+X = sdpvar(nc, nc, 'symmetric');
+Gamma = sdpvar(nx, nc, 'full');
+Theta = sdpvar(nx, ny, 'full');
+Upsilon = sdpvar(nu, nc, 'full');
+Omega = sdpvar(nu, ny, 'full');
+
+sdpVars.Y = Y;
+sdpVars.X = X;
+sdpVars.Gamma = Gamma;
+sdpVars.Theta = Theta;
+sdpVars.Upsilon = Upsilon;
+sdpVars.Omega = Omega;
 
 % Run the bisection based search until gamma is within the specified
 % tolerance or the maximum amount of iterations is reached
@@ -35,10 +46,10 @@ while N < Nmax
         opts.performanceValue = mean(a);
 
         % Fill the H-infinity LMI
-        LMI = fillSynthesisLMI(sys, opts);
+        synLMI = fillDissSynthesisLMI(sys, sdpVars, opts);
 
         rng shuffle;
-        diagnostics = optimize(LMI, [], opts.LMI.solverOptions);
+        diagnostics = optimize(synLMI, [], opts.LMI.solverOptions);
 
         if diagnostics.problem == 0
             a(2) = mean(a);
@@ -62,10 +73,20 @@ end
 
 % Determine if bisection-based search was succesful
 if initialfeas
-    gamma = a(2);
+    opts.performanceValue = a(2);
 else
-    gamma = nan;
+    opts.performanceValue = nan;
     return
 end
 
+
+
+if strcmpi(opts.numericalConditioning, 'on')
+    
 end
+
+end
+
+
+
+

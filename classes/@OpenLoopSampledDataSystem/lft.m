@@ -9,7 +9,7 @@ function objJF = lft(OLSDSystem1, OLSDSystem2, opts)
 arguments
     OLSDSystem1         OpenLoopSampledDataSystem
     OLSDSystem2         {mustBeNumericOrListedType(OLSDSystem2, "ss", "tf", "OpenLoopSampledDataSystem")}
-    opts                (1,1) jfopt
+    opts                jfopt
 end
 
 if strcmpi(OLSDSystem1.reconstructor, 'unspecified')

@@ -1,4 +1,4 @@
-function [Controller, synthesisNormValue, CLJFSystem] = synthesis(Plant, opts)
+function [K, synthesisNormValue, T] = synthesis(Plant, opts)
 
 arguments
     Plant     {mustBeA(Plant, ["OpenLoopSampledDataSystem", "OpenLoopJumpFlowSystem"])}
@@ -18,29 +18,30 @@ end
 % Check all specified system norms such as Hinf, H2, H2g, L1
 switch lower(opts.performanceString)
     case {'hinf', 'l2', 'h00', 'hoo'}
-        [Controller, synthesisNormValue, CLJFSystem] = SDHinfsyn(Plant, opts);
+%         [K, synthesisNormValue, T] = SDHinfsyn(Plant, opts);
+        synVars = bisectionDissSynthesisLMI(Plant, opts);
     case {'h2'}
         warning('The H2 norm has yet to be implemented in the jump-flow systems toolbox');
-        Controller = 0;
+        K = 0;
         synthesisNormValue = nan;
-        CLJFSystem = JumpFlowSystem();
+        T = JumpFlowSystem();
     case {'h2g', 'genh2'}
         warning('The generalized H2 norm has yet to be implemented in the jump-flow systems toolbox');
-        Controller = 0;
+        K = 0;
         synthesisNormValue = nan;
-        CLJFSystem = JumpFlowSystem();
+        T = JumpFlowSystem();
     case {'l1'}
         warning('The L1 norm has yet to be implemented in the jump-flow systems toolbox');
-        Controller = 0;
+        K = 0;
         synthesisNormValue = nan;
-        CLJFSystem = JumpFlowSystem();
+        T = JumpFlowSystem();
     case {'passivity', 'passive', 'pass'}
-        [Controller, synthesisNormValue, CLJFSystem] = SDPassivesyn(Plant, opts);
+        [K, synthesisNormValue, T] = SDPassivesyn(Plant, opts);
     case {'qrs', 'quad', 'quadratic'}
         warning('Controller synthesis based on quadratic dissipativity is not yet implemented in the jump-flow systems toolbox');
-        Controller = 0;
+        K = 0;
         synthesisNormValue = nan;
-        CLJFSystem = JumpFlowSystem();
+        T = JumpFlowSystem();
     otherwise
         error('The chosen performance indicator string is not a valid choice as it does not represent a system norm or gain.');
 end

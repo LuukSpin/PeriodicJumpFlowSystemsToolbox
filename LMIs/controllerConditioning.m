@@ -4,9 +4,9 @@ function [sdpVariables, A_bar, gamma] = controllerConditioning(OpenLoopSDSystem,
 %
 
 arguments
-    OpenLoopSDSystem        (1,1) OpenLoopSampledDataSystem
+    OpenLoopSDSystem        OpenLoopSampledDataSystem
     sdpVariableStruct       struct
-    opts                    SDopts
+    opts                    jfopt
     performanceIndicator    string = 'Hinf'
     gamma                   double = 1
 end
