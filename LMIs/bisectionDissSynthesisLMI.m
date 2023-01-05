@@ -1,4 +1,7 @@
-function synVars = bisectionDissSynthesisLMI(sys, opts)
+function [K, val, T] = bisectionDissSynthesisLMI(sys, opts)
+% This bisection synthesis algorithm now only works for Hinf norm. Gen H2
+% norm will be added in the future.
+
 arguments
     sys     OpenLoopSampledDataSystem
     opts    jfopt
@@ -7,7 +10,6 @@ end
 % Bisection settings
 Nmax = opts.LMI.bisection.maxIter; %Maximum numbers of iterations of the bisection search
 tol = opts.LMI.bisection.tol; %Tolerance to calculate upperbound of Hinf norm
-numAcc = opts.LMI.numericalAccuracy;
 
 % Initialization
 a_init = max(norm(sys.Dzc_wc, 2), norm(sys.Dzd_wd, 2));
@@ -20,6 +22,12 @@ end
 N = 0;
 last = 0;
 initialfeas = 0;
+
+% Dimensions
+nx = sys.nx;
+nc = nx;
+nu = sys.nu;
+ny = sys.ny;
 
 % LMI variables
 Y = sdpvar(nx, nx, 'symmetric');
@@ -42,7 +50,6 @@ while N < Nmax
     N = N + 1;
 
     if ~xor((a(2) - a(1)) > tol, N < Nmax-1) || last
-
         opts.performanceValue = mean(a);
 
         % Fill the H-infinity LMI
@@ -79,10 +86,19 @@ else
     return
 end
 
-
-
-if strcmpi(opts.numericalConditioning, 'on')
-    
+if strcmpi(opts.LMI.numericalConditioning, 'yes')
+    [K, val] = controllerConditioning(sys, sdpVars, opts);
+    T = lft(sys, K, opts);
+else
+    K = controllerConstruction(sys, sdpVars, opts);
+    if ~wellConditionedController(K)
+        warning('Controller is ill-conditioned, adding numerical conditioning is advised.');
+    end
+    val = opts.performanceValue;
+    T = lft(sys, K, opts);
+    if isstable(T, opts) ~= true
+        warning('Closed-loop system is unstable, possibly due to ill-conditioned controller');
+    end
 end
 
 end

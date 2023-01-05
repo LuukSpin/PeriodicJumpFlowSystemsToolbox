@@ -1,7 +1,8 @@
-function LMI = fillDissSynthesisLMI(sys, opts)
+function LMI = fillDissSynthesisLMI(sys, sdpVars, opts)
 
 arguments
     sys       {mustBeA(sys, "OpenLoopSampledDataSystem")}%, "ss", "zpk", "tf"])}
+    sdpVars   struct
     opts      jfopt
 end
 
@@ -54,14 +55,14 @@ A_bar = A_hat(1:nx, 1:nx);
 B_bar = B_hat(1:nx, :);
 C_bar = C_hat(:, 1:nx);
 
-Ad = OpenLoopSDSystem.Ad;
-Bd = OpenLoopSDSystem.Bwd;
-Bu = OpenLoopSDSystem.Bud;
-Cd = OpenLoopSDSystem.Czd;
-Cy = OpenLoopSDSystem.Cy;
-Dyd = OpenLoopSDSystem.Dy_wd;
-Ddu = OpenLoopSDSystem.Dzd_ud;
-Ddd = OpenLoopSDSystem.Dzd_wd;
+Ad = sys.Ad;
+Bd = sys.Bwd;
+Bu = sys.Bud;
+Cd = sys.Czd;
+Cy = sys.Cy;
+Dyd = sys.Dy_wd;
+Ddu = sys.Dzd_ud;
+Ddd = sys.Dzd_wd;
 %Dyu is not necessary since it may be assumed to be zero w.l.o.g.
 %If Dyu is in fact not zero, this will be compensated for in the controller
 %construction.
@@ -179,6 +180,6 @@ else
 end
 
 numAcc = opts.LMI.numericalAccuracy;
-LMI = dissSynthesisMatrix >= numAcc*eye(size(jfAnalysisMatrix));
+LMI = dissSynthesisMatrix >= numAcc*eye(size(dissSynthesisMatrix));
 
 end

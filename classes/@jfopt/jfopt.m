@@ -6,17 +6,16 @@ classdef jfopt < handle
         reconstructor
         performanceString
         performanceValue
-        numericalConditioning
     end
 
     methods
         % Constructor
-        function obj = jfopt(h, performanceString, performanceValue, numericalConditioning)
+        function obj = jfopt(h, performanceString, performanceValue, controllerConditioning)
             arguments
                 h                       (1,1) double {mustBeGreaterThanOrEqual(h, 0)}
                 performanceString       char = 'hinf'
                 performanceValue        double = []
-                numericalConditioning   char = 'no'
+                controllerConditioning   char = 'no'
             end
 
             obj.simulation.rule = 1;
@@ -31,8 +30,7 @@ classdef jfopt < handle
             obj.LMI.bisection.maxIter = 100;
             obj.LMI.bisection.tol = 1e-4;
             obj.LMI.backoffFactor = 1.01;
-            obj.LMI.controllerConditioning = 'yes';
-            obj.LMI.numericalConditioning = numericalConditioning;
+            obj.LMI.controllerConditioning = controllerConditioning;
 
             obj.performanceString = performanceString;
 
