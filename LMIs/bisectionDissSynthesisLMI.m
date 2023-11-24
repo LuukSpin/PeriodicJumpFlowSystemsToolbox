@@ -1,9 +1,10 @@
-function [K, val, T] = bisectionDissSynthesisLMI(sys, opts)
+function [K, val, T] = bisectionDissSynthesisLMI(sys, sdpVars, opts)
 % This bisection synthesis algorithm now only works for Hinf norm. Gen H2
 % norm will be added in the future.
 
 arguments
     sys     OpenLoopSampledDataSystem
+    sdpVars struct
     opts    jfopt
 end
 
@@ -28,21 +29,6 @@ nx = sys.nx;
 nc = nx;
 nu = sys.nu;
 ny = sys.ny;
-
-% LMI variables
-Y = sdpvar(nx, nx, 'symmetric');
-X = sdpvar(nc, nc, 'symmetric');
-Gamma = sdpvar(nx, nc, 'full');
-Theta = sdpvar(nx, ny, 'full');
-Upsilon = sdpvar(nu, nc, 'full');
-Omega = sdpvar(nu, ny, 'full');
-
-sdpVars.Y = Y;
-sdpVars.X = X;
-sdpVars.Gamma = Gamma;
-sdpVars.Theta = Theta;
-sdpVars.Upsilon = Upsilon;
-sdpVars.Omega = Omega;
 
 % Run the bisection based search until gamma is within the specified
 % tolerance or the maximum amount of iterations is reached
@@ -86,7 +72,7 @@ else
     return
 end
 
-if strcmpi(opts.LMI.numericalConditioning, 'yes')
+if strcmpi(opts.LMI.controllerConditioning, 'yes')
     [K, val] = controllerConditioning(sys, sdpVars, opts);
     T = lft(sys, K, opts);
 else

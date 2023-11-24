@@ -19,7 +19,7 @@ switch lower(opts.performanceString)
         error('L1-norm is not yet implemented');
     case {'passivity', 'passive', 'pass'}
         Qc = zeros(sys.nwc);
-        Sc = -eye(sys.nwc, sys.nzc)/2;
+        Sc = eye(sys.nwc, sys.nzc)/2;
         Rc = zeros(sys.nzc);
     case {'qrs', 'quad', 'quadratic'}
         Qc = opts.performanceValue.Qc;

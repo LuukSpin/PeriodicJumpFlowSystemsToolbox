@@ -77,7 +77,7 @@ end
 K = controllerConstruction(sys, sdpVars, opts);
 val = opts.performanceValue;
 
-if wellConditionedController(K)
+if ~wellConditionedController(K)
     warning('Numerical conditioning of the controller still produces ill-conditioned controller.');
 end
 end

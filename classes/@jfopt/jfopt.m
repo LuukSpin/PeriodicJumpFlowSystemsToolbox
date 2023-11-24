@@ -28,7 +28,7 @@ classdef jfopt < handle
             obj.LMI.solverOptions = sdpsettings('verbose', 0, 'solver', 'mosek');
             obj.LMI.numericalAccuracy = 1e-8;
             obj.LMI.bisection.maxIter = 100;
-            obj.LMI.bisection.tol = 1e-4;
+            obj.LMI.bisection.tol = 1e-6;
             obj.LMI.backoffFactor = 1.01;
             obj.LMI.controllerConditioning = controllerConditioning;
 

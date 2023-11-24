@@ -365,8 +365,8 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
         % Stability function
         function stabilityFlag = isstable(objJF, opts)
             arguments
-                objJF   (1,1) JumpFlowSystem
-                opts    (1,1) jfopt
+                objJF   JumpFlowSystem
+                opts    jfopt
             end
             h = opts.simulation.SampleTime;
             stabilityFlag = all(abs(eig(expm(objJF.Ac*h)*objJF.Ad)) < 1);
@@ -375,8 +375,8 @@ classdef JumpFlowSystem < matlab.mixin.CustomDisplay
         % Reachability function
         function reachabilityFlag = isreachable(objJF, opts)
             arguments
-                objJF   (1,1) JumpFlowSystem
-                opts    (1,1) jfopt
+                objJF   JumpFlowSystem
+                opts    jfopt
             end
 
             Ac = objJF.Ac;
