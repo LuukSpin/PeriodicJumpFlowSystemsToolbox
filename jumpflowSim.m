@@ -6,7 +6,7 @@ arguments
     objJF   (1,1) JumpFlowSystem
     wc
     wd
-    opts    SDopts
+    opts    %{SDopts, jfopts}
 end
 
 h = opts.simulation.SampleTime;
